@@ -1,0 +1,43 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SectionTitle from "@/components/SectionTitle.astro";
+---
+
+<BaseLayout title="搜索 — echo" description="搜索 echo 的文章和项目记录。" noindex={true} searchIndex={false}>
+  <section class="page-section">
+    <SectionTitle index="05" eyebrow="LOCAL FULL-TEXT SEARCH" title="搜索本站" description="搜索索引在构建时生成，不需要把查询提交给第三方搜索服务。" />
+    <div class="search-shell">
+      <p class="search-state" data-search-state role="status">正在载入本地搜索索引…</p>
+      <div class="search-components">
+        <pagefind-config excerpt-length="22"></pagefind-config>
+        <pagefind-input placeholder="搜索文章、项目或技术主题…"></pagefind-input>
+        <pagefind-summary></pagefind-summary>
+        <pagefind-results></pagefind-results>
+      </div>
+      <noscript><p class="empty-state">搜索需要启用 JavaScript。你仍然可以通过文章列表和标签浏览全部内容。</p></noscript>
+    </div>
+  </section>
+</BaseLayout>
+
+<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css" />
+<script is:inline>
+  function bootSearch() {
+    var target = document.querySelector(".search-components");
+    var state = document.querySelector("[data-search-state]");
+    if (!target || target.dataset.ready === "true") return;
+    target.dataset.ready = "true";
+
+    var script = document.createElement("script");
+    script.src = "/pagefind/pagefind-component-ui.js";
+    script.type = "module";
+    script.onload = function () {
+      if (state) state.textContent = "搜索索引已就绪。支持键盘上下选择结果。";
+    };
+    script.onerror = function () {
+      if (state) state.textContent = "开发预览中暂时没有搜索索引；运行 npm run build 后即可使用。";
+    };
+    document.head.appendChild(script);
+  }
+  document.addEventListener("astro:page-load", bootSearch);
+  bootSearch();
+</script>

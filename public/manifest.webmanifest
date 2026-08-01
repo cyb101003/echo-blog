@@ -1,0 +1,17 @@
+{
+  "name": "echo — 个人技术博客",
+  "short_name": "echo",
+  "description": "15 岁开发者 echo 的项目、文章与实验记录。",
+  "theme_color": "#0a0c0f",
+  "background_color": "#0a0c0f",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/assets/echo-avatar.jpg",
+      "sizes": "430x440",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

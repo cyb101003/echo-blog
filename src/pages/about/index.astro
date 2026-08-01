@@ -1,0 +1,33 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SectionTitle from "@/components/SectionTitle.astro";
+import github from "@/data/github.json";
+import { SITE } from "@/config";
+---
+
+<BaseLayout title="关于 echo" description="关于 15 岁开发者 echo，以及这个博客存在的原因。">
+  <section class="page-section about-page">
+    <SectionTitle index="01A" eyebrow="ABOUT THE DEVELOPER" title="关于 echo" description="这里先只保留已经确认的信息。经历、所在地和联系方式可以在以后继续补充。" />
+
+    <div class="about-profile">
+      <div class="about-portrait">
+        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="echo 的猫咪头像，戴着黑框眼镜" />
+        <p><strong>{SITE.age}</strong><span>YEARS OLD</span></p>
+      </div>
+      <div class="about-story">
+        <p class="about-lead">我是 echo，一名 15 岁的技术开发者。</p>
+        <p>我会把学习过程、项目实现和仍然没有解决的问题记录在这里。相比只展示完成品，我更希望保留每次尝试背后的判断和变化。</p>
+        <p>目前 GitHub 账号 <a href={SITE.github} target="_blank" rel="noreferrer">@cyb101003</a> 有 {github.repositories.length} 个公开仓库，其中 {github.repositories.filter(repo => repo.kind === "original").length} 个原创项目、{github.repositories.filter(repo => repo.kind === "fork").length} 个 Fork。</p>
+        <div class="about-placeholders" aria-label="待补充资料">
+          <div><span>所在地</span><strong>待补充</strong></div>
+          <div><span>YouTube</span><strong>待补充</strong></div>
+          <div><span>X / Twitter</span><strong>待补充</strong></div>
+        </div>
+        <div class="about-actions">
+          <a class="button-primary" href="/projects/">查看项目 <span>↗</span></a>
+          <a class="button-quiet" href={SITE.github} target="_blank" rel="noreferrer">访问 GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

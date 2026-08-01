@@ -1,0 +1,113 @@
+---
+import { ClientRouter } from "astro:transitions";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { SITE } from "@/config";
+import "@/styles/global.css";
+
+type Props = {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  publishedAt?: Date;
+  updatedAt?: Date;
+  noindex?: boolean;
+  searchIndex?: boolean;
+  immersive?: boolean;
+};
+
+const {
+  title = SITE.title,
+  description = SITE.description,
+  image = "/og/home.png",
+  type = "website",
+  publishedAt,
+  updatedAt,
+  noindex = false,
+  searchIndex = true,
+  immersive = false
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const imageUrl = new URL(image, Astro.site ?? Astro.url);
+const structuredData = type === "article"
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: title,
+      description,
+      image: imageUrl.href,
+      datePublished: publishedAt?.toISOString(),
+      ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
+      author: { "@type": "Person", name: SITE.author, url: SITE.github },
+      mainEntityOfPage: canonical.href
+    }
+  : {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": `${canonical.origin}/#person`,
+          name: SITE.author,
+          url: canonical.origin,
+          sameAs: [SITE.github]
+        },
+        {
+          "@type": "WebSite",
+          "@id": `${canonical.origin}/#website`,
+          name: SITE.title,
+          description: SITE.description,
+          url: canonical.origin,
+          inLanguage: SITE.locale,
+          publisher: { "@id": `${canonical.origin}/#person` },
+          potentialAction: {
+            "@type": "SearchAction",
+            target: `${canonical.origin}/search/?q={search_term_string}`,
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    };
+---
+
+<!doctype html>
+<html lang={SITE.locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#0a0c0f" />
+    <meta name="color-scheme" content="dark" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/jpeg" href="/assets/echo-avatar.jpg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={imageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <ClientRouter />
+  </head>
+  <body class:list={{ "is-immersive": immersive }}>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <div class:list={["site-frame", { "site-frame--immersive": immersive }]}>
+      <Header />
+      <main id="main-content" tabindex="-1" data-pagefind-body={searchIndex ? "" : undefined}>
+        <slot />
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>

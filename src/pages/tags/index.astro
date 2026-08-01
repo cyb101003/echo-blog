@@ -1,0 +1,20 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SectionTitle from "@/components/SectionTitle.astro";
+
+const posts = await getCollection("posts", ({ data }) => !data.draft);
+const tags = [...posts.reduce((map, post) => {
+  post.data.tags.forEach(tag => map.set(tag, (map.get(tag) ?? 0) + 1));
+  return map;
+}, new Map<string, number>())].sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title="标签 — echo" description="按照主题浏览 echo 的文章。">
+  <section class="page-section">
+    <SectionTitle index="03A" eyebrow="TOPICS" title="文章标签" description="从技术主题进入内容，而不是只能按照发布时间翻找。" />
+    <div class="tag-cloud">
+      {tags.map(([tag, count]) => <a href={`/tags/${encodeURIComponent(tag)}/`}><span>#{tag}</span><b>{count}</b></a>)}
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,130 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+type Props = {
+  title: string;
+  description: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  tags: string[];
+  slug: string;
+  previous?: { id: string; title: string };
+  next?: { id: string; title: string };
+};
+
+const { title, description, publishedAt, updatedAt, tags, slug, previous, next } = Astro.props;
+const date = publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+---
+
+<BaseLayout
+  title={`${title} — echo`}
+  description={description}
+  image={`/og/${slug}.png`}
+  type="article"
+  publishedAt={publishedAt}
+  updatedAt={updatedAt}
+>
+  <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
+  <article class="article-shell">
+    <header class="article-header">
+      <a class="back-link" href="/posts/">← 返回文章</a>
+      <p class="kicker">ARTICLE / {date}</p>
+      <h1>{title}</h1>
+      <p class="article-deck">{description}</p>
+      <ul class="article-tags" aria-label="文章标签">
+        {tags.map(tag => <li><a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a></li>)}
+      </ul>
+    </header>
+    <div class="article-grid">
+      <aside class="article-aside" aria-label="文章信息">
+        <p><span>作者</span>echo</p>
+        <p><span>发布</span>{date}</p>
+        {updatedAt && <p><span>更新</span>{updatedAt.toLocaleDateString("zh-CN")}</p>}
+        <nav data-toc aria-label="文章目录"><p>目录</p><ol></ol></nav>
+      </aside>
+      <div class="prose" data-article-body>
+        <slot />
+      </div>
+    </div>
+    {(previous || next) && (
+      <nav class="article-pagination" aria-label="相邻文章">
+        {previous ? (
+          <a href={`/posts/${previous.id}/`}>
+            <span>上一篇</span>
+            <strong>{previous.title}</strong>
+          </a>
+        ) : <span aria-hidden="true"></span>}
+        {next ? (
+          <a href={`/posts/${next.id}/`}>
+            <span>下一篇</span>
+            <strong>{next.title}</strong>
+          </a>
+        ) : <span aria-hidden="true"></span>}
+      </nav>
+    )}
+  </article>
+  <button class="back-to-top" type="button" data-back-to-top aria-label="返回顶部">↑</button>
+</BaseLayout>
+
+<script>
+  function setupArticle() {
+    const body = document.querySelector("[data-article-body]");
+    if (!(body instanceof HTMLElement) || body.dataset.ready === "true") return;
+    body.dataset.ready = "true";
+
+    const toc = document.querySelector("[data-toc] ol");
+    const headings = [...body.querySelectorAll("h2, h3")];
+    headings.forEach((heading, index) => {
+      if (!heading.id) heading.id = `section-${index + 1}`;
+      const anchor = document.createElement("a");
+      anchor.href = `#${heading.id}`;
+      anchor.className = "heading-anchor";
+      anchor.setAttribute("aria-label", `链接到 ${heading.textContent}`);
+      anchor.textContent = "#";
+      heading.append(anchor);
+
+      if (toc) {
+        const item = document.createElement("li");
+        item.className = heading.tagName === "H3" ? "toc-subitem" : "";
+        const link = document.createElement("a");
+        link.href = `#${heading.id}`;
+        link.textContent = heading.textContent?.replace(/#$/, "") || `章节 ${index + 1}`;
+        item.append(link);
+        toc.append(item);
+      }
+    });
+
+    body.querySelectorAll("pre").forEach(block => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-code";
+      button.textContent = "复制";
+      button.addEventListener("click", async () => {
+        const code = block.querySelector("code")?.textContent || "";
+        try {
+          await navigator.clipboard.writeText(code);
+          button.textContent = "已复制";
+        } catch {
+          button.textContent = "复制失败";
+        }
+        window.setTimeout(() => { button.textContent = "复制"; }, 1600);
+      });
+      block.append(button);
+    });
+
+    const progress = document.querySelector("[data-reading-progress]");
+    const topButton = document.querySelector("[data-back-to-top]");
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const value = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+      if (progress instanceof HTMLElement) progress.style.transform = `scaleX(${value})`;
+      if (topButton instanceof HTMLElement) topButton.classList.toggle("visible", window.scrollY > 600);
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  }
+
+  document.addEventListener("astro:page-load", setupArticle);
+  setupArticle();
+</script>

@@ -1,0 +1,25 @@
+{
+  "name": "echo-blog",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run sync:github && astro dev",
+    "build": "npm run sync:github && astro check && astro build && pagefind --site dist && npm run budget",
+    "preview": "astro preview",
+    "check": "astro check",
+    "sync:github": "node scripts/sync-github.mjs",
+    "budget": "node scripts/check-budget.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
+    "@resvg/resvg-js": "^2.6.2",
+    "astro": "^7.1.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "pagefind": "^1.5.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,19 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = { post: CollectionEntry<"posts">; index?: number };
+const { post, index = 0 } = Astro.props;
+const date = post.data.publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
+---
+
+<article>
+  <a class="post-row" href={`/posts/${post.id}/`} aria-label={`阅读《${post.data.title}》`}>
+    <p class="post-index">{String(index + 1).padStart(2, "0")}</p>
+    <div class="post-copy">
+      <div class="post-meta"><time datetime={post.data.publishedAt.toISOString()}>{date}</time><span>{post.data.tags[0] ?? "记录"}</span></div>
+      <h2>{post.data.title}</h2>
+      <p>{post.data.description}</p>
+    </div>
+    <span class="round-link" aria-hidden="true">↗</span>
+  </a>
+</article>

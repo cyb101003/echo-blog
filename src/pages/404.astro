@@ -1,0 +1,12 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="页面不存在 — echo" description="这个地址还没有内容。" noindex={true} searchIndex={false}>
+  <section class="not-found">
+    <p class="kicker">ERROR / 404</p>
+    <h1>这里没有<br />留下回声。</h1>
+    <p>地址可能已经改变，或者内容还没有发布。</p>
+    <a class="button-primary" href="/">返回首页 <span>→</span></a>
+  </section>
+</BaseLayout>
