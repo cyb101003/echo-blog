@@ -7,13 +7,14 @@ const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.st
 
 <header class="site-header">
   <a class="wordmark" href="/" aria-label="echo 首页">{SITE.shortTitle}</a>
-  <nav class="site-nav" aria-label="主要导航">
+  <nav class="site-nav" aria-label="主要导航" data-site-nav>
     {NAV_ITEMS.map(item => (
       <a href={item.href} aria-current={isActive(item.href) ? "page" : undefined}>
         <span>{item.index}</span>
         {item.label}
       </a>
     ))}
+    <i class="nav-indicator" aria-hidden="true"></i>
   </nav>
   <div class="header-foot">
     <p><span class="status-dot" aria-hidden="true"></span>OPEN TO LEARN</p>

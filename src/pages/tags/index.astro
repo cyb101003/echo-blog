@@ -14,7 +14,7 @@ const tags = [...posts.reduce((map, post) => {
   <section class="page-section">
     <SectionTitle index="03A" eyebrow="TOPICS" title="文章标签" description="从技术主题进入内容，而不是只能按照发布时间翻找。" />
     <div class="tag-cloud">
-      {tags.map(([tag, count]) => <a href={`/tags/${encodeURIComponent(tag)}/`}><span>#{tag}</span><b>{count}</b></a>)}
+      {tags.map(([tag, count], index) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-reveal style={`--reveal-index: ${index}`}><span>#{tag}</span><b>{count}</b></a>)}
     </div>
   </section>
 </BaseLayout>

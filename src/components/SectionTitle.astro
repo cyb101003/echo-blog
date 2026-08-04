@@ -3,7 +3,7 @@ type Props = { index: string; eyebrow: string; title: string; description?: stri
 const { index, eyebrow, title, description } = Astro.props;
 ---
 
-<header class="section-title">
+<header class="section-title" data-reveal>
   <div>
     <span>{index}</span>
     <p class="kicker">{eyebrow}</p>

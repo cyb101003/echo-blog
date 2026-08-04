@@ -17,7 +17,7 @@ const groups = [...grouped.entries()].sort(([a], [b]) => Number(b) - Number(a));
     <SectionTitle index="04" eyebrow="ARCHIVE BY YEAR" title="文章归档" description="按发布时间整理的完整文章记录。没有挑选，也没有算法排序。" />
     <div class="archive-list">
       {groups.map(([year, yearPosts]) => (
-        <section class="archive-year">
+        <section class="archive-year" data-reveal>
           <h2>{year}</h2>
           <ol>
             {yearPosts.map(post => (
@@ -25,7 +25,7 @@ const groups = [...grouped.entries()].sort(([a], [b]) => Number(b) - Number(a));
                 <a href={`/posts/${post.id}/`}>
                   <time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}</time>
                   <span>{post.data.title}</span>
-                  <b aria-hidden="true">→</b>
+                  <b class="motion-arrow" aria-hidden="true">→</b>
                 </a>
               </li>
             ))}

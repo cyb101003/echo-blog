@@ -9,9 +9,9 @@ import { SITE } from "@/config";
   <section class="page-section about-page">
     <SectionTitle index="01A" eyebrow="ABOUT THE DEVELOPER" title="关于 echo" description="这里先只保留已经确认的信息。经历、所在地和联系方式可以在以后继续补充。" />
 
-    <div class="about-profile">
+    <div class="about-profile" data-reveal>
       <div class="about-portrait">
-        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="echo 的猫咪头像，戴着黑框眼镜" />
+        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="echo 的猫咪头像，戴着黑框眼镜" data-image-reveal />
         <p><strong>{SITE.age}</strong><span>YEARS OLD</span></p>
       </div>
       <div class="about-story">
@@ -24,7 +24,7 @@ import { SITE } from "@/config";
           <div><span>X / Twitter</span><strong>待补充</strong></div>
         </div>
         <div class="about-actions">
-          <a class="button-primary" href="/projects/">查看项目 <span>↗</span></a>
+          <a class="button-primary" href="/projects/">查看项目 <span class="motion-arrow">↗</span></a>
           <a class="button-quiet" href={SITE.github} target="_blank" rel="noreferrer">访问 GitHub</a>
         </div>
       </div>

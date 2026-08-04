@@ -6,7 +6,7 @@ import SectionTitle from "@/components/SectionTitle.astro";
 <BaseLayout title="搜索 — echo" description="搜索 echo 的文章和项目记录。" noindex={true} searchIndex={false}>
   <section class="page-section">
     <SectionTitle index="05" eyebrow="LOCAL FULL-TEXT SEARCH" title="搜索本站" description="搜索索引在构建时生成，不需要把查询提交给第三方搜索服务。" />
-    <div class="search-shell">
+    <div class="search-shell" data-reveal>
       <p class="search-state" data-search-state role="status">正在载入本地搜索索引…</p>
       <div class="search-components">
         <pagefind-config excerpt-length="22"></pagefind-config>

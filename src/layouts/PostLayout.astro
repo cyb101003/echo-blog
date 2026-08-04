@@ -26,8 +26,8 @@ const metaDescription = description ?? `echo 的文章：${title}`;
   updatedAt={updatedAt}
 >
   <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
-  <article class="article-shell">
-    <header class="article-header">
+  <article class="article-shell" data-article-slug={slug}>
+    <header class="article-header" data-reveal>
       <a class="back-link" href="/posts/">← 返回文章</a>
       <p class="kicker">ARTICLE / {date}</p>
       <h1>{title}</h1>
@@ -36,7 +36,7 @@ const metaDescription = description ?? `echo 的文章：${title}`;
         {tags.map(tag => <li><a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a></li>)}
       </ul>
     </header>
-    <div class="article-grid">
+    <div class="article-grid" data-reveal>
       <aside class="article-aside" aria-label="文章信息">
         <p><span>作者</span>echo</p>
         <p><span>发布</span>{date}</p>
@@ -48,19 +48,27 @@ const metaDescription = description ?? `echo 的文章：${title}`;
       </div>
     </div>
     {(previous || next) && (
-      <nav class="article-pagination" aria-label="相邻文章">
+      <nav class="article-pagination" aria-label="相邻文章" data-reveal>
+        <header class="article-pagination-heading">
+          <p class="kicker">CONTINUE / KEEP READING</p>
+          <h2>继续阅读</h2>
+        </header>
+        <div class="article-pagination-grid">
         {previous ? (
-          <a href={`/posts/${previous.id}/`}>
-            <span>上一篇</span>
+          <a class="article-pagination-card article-pagination-card--previous" href={`/posts/${previous.id}/`} data-direction="previous">
+            <span class="pagination-card-top"><small>PREVIOUS / 上一篇</small><i class="pagination-arrow" aria-hidden="true">←</i></span>
             <strong>{previous.title}</strong>
+            <span class="pagination-card-foot"><small>ARTICLE</small><i aria-hidden="true">01</i></span>
           </a>
         ) : null}
         {next ? (
-          <a href={`/posts/${next.id}/`}>
-            <span>下一篇</span>
+          <a class="article-pagination-card article-pagination-card--next" href={`/posts/${next.id}/`} data-direction="next">
+            <span class="pagination-card-top"><small>NEXT / 下一篇</small><i class="pagination-arrow" aria-hidden="true">→</i></span>
             <strong>{next.title}</strong>
+            <span class="pagination-card-foot"><small>ARTICLE</small><i aria-hidden="true">02</i></span>
           </a>
         ) : null}
+        </div>
       </nav>
     )}
   </article>
@@ -113,17 +121,55 @@ const metaDescription = description ?? `echo 的文章：${title}`;
       block.append(button);
     });
 
+    const article = document.querySelector("[data-article-slug]");
+    const slug = article instanceof HTMLElement ? article.dataset.articleSlug : "";
     const progress = document.querySelector("[data-reading-progress]");
     const topButton = document.querySelector("[data-back-to-top]");
+    const tocLinks = [...document.querySelectorAll("[data-toc] a")];
+    const controller = new AbortController();
+    let ticking = false;
+
     const update = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const value = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+      ticking = false;
+      const bodyTop = body.getBoundingClientRect().top + window.scrollY;
+      const start = bodyTop - window.innerHeight * 0.22;
+      const end = bodyTop + body.offsetHeight - window.innerHeight * 0.58;
+      const value = Math.max(0, Math.min(1, (window.scrollY - start) / Math.max(1, end - start)));
+
       if (progress instanceof HTMLElement) progress.style.transform = `scaleX(${value})`;
       if (topButton instanceof HTMLElement) topButton.classList.toggle("visible", window.scrollY > 600);
+
+      const activeHeading = [...headings].reverse().find(heading => heading.getBoundingClientRect().top <= 170) || headings[0];
+      tocLinks.forEach(link => {
+        if (!(link instanceof HTMLAnchorElement)) return;
+        const selected = Boolean(activeHeading?.id) && link.getAttribute("href") === `#${activeHeading.id}`;
+        link.classList.toggle("is-active", selected);
+        if (selected) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+
+      if (slug) {
+        try {
+          const key = `echo:reading:${slug}`;
+          const previousValue = Number(window.localStorage.getItem(key) || 0);
+          if (value > previousValue) window.localStorage.setItem(key, String(value));
+        } catch {
+          // Reading progress remains available for this page when storage is restricted.
+        }
+      }
     };
-    window.addEventListener("scroll", update, { passive: true });
-    update();
-    topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+    const requestUpdate = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", requestUpdate, { passive: true, signal: controller.signal });
+    window.addEventListener("resize", requestUpdate, { passive: true, signal: controller.signal });
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
+    requestUpdate();
+    topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }), { signal: controller.signal });
   }
 
   document.addEventListener("astro:page-load", setupArticle);
