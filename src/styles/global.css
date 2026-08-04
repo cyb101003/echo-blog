@@ -987,6 +987,10 @@ main {
   transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
 
+.article-pagination a:only-child {
+  grid-column: 1 / -1;
+}
+
 .article-pagination a span {
   color: var(--accent);
   font: 700 0.74rem/1 var(--mono);

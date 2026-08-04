@@ -9,7 +9,10 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await getCollection("posts", ({ data }) => !data.draft);
   return [
     { params: { slug: "home" }, props: { title: SITE.title, description: SITE.description } },
-    ...posts.map(post => ({ params: { slug: post.id }, props: { title: post.data.title, description: post.data.description } }))
+    ...posts.map(post => ({
+      params: { slug: post.id },
+      props: { title: post.data.title, description: post.data.description ?? `echo 的文章：${post.data.title}` }
+    }))
   ];
 };
 

@@ -11,7 +11,7 @@ export async function GET(context: APIContext) {
     site: context.site ?? "https://cyb101003.github.io",
     items: posts.map(post => ({
       title: post.data.title,
-      description: post.data.description,
+      description: post.data.description ?? `echo 的文章：${post.data.title}`,
       pubDate: post.data.publishedAt,
       link: `/posts/${post.id}/`,
       categories: post.data.tags

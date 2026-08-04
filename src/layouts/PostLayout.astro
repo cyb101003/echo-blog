@@ -3,7 +3,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
 type Props = {
   title: string;
-  description: string;
+  description?: string;
   publishedAt: Date;
   updatedAt?: Date;
   tags: string[];
@@ -14,11 +14,12 @@ type Props = {
 
 const { title, description, publishedAt, updatedAt, tags, slug, previous, next } = Astro.props;
 const date = publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+const metaDescription = description ?? `echo 的文章：${title}`;
 ---
 
 <BaseLayout
   title={`${title} — echo`}
-  description={description}
+  description={metaDescription}
   image={`/og/${slug}.png`}
   type="article"
   publishedAt={publishedAt}
@@ -30,7 +31,7 @@ const date = publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "
       <a class="back-link" href="/posts/">← 返回文章</a>
       <p class="kicker">ARTICLE / {date}</p>
       <h1>{title}</h1>
-      <p class="article-deck">{description}</p>
+      {description && <p class="article-deck">{description}</p>}
       <ul class="article-tags" aria-label="文章标签">
         {tags.map(tag => <li><a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a></li>)}
       </ul>
@@ -53,13 +54,13 @@ const date = publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "
             <span>上一篇</span>
             <strong>{previous.title}</strong>
           </a>
-        ) : <span aria-hidden="true"></span>}
+        ) : null}
         {next ? (
           <a href={`/posts/${next.id}/`}>
             <span>下一篇</span>
             <strong>{next.title}</strong>
           </a>
-        ) : <span aria-hidden="true"></span>}
+        ) : null}
       </nav>
     )}
   </article>

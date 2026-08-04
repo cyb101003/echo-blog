@@ -12,7 +12,7 @@ const date = post.data.publishedAt.toLocaleDateString("zh-CN", { year: "numeric"
     <div class="post-copy">
       <div class="post-meta"><time datetime={post.data.publishedAt.toISOString()}>{date}</time><span>{post.data.tags[0] ?? "记录"}</span></div>
       <h2>{post.data.title}</h2>
-      <p>{post.data.description}</p>
+      {post.data.description && <p>{post.data.description}</p>}
     </div>
     <span class="round-link" aria-hidden="true">↗</span>
   </a>
