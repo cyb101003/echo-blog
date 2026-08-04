@@ -28,12 +28,15 @@ function setupNameDecode() {
 
   runtime.__echoNameDecoded = true;
   const glyphs = "#?70_<>/{}[]";
-  const framesPerCharacter = 3;
-  const totalFrames = finalValue.length * framesPerCharacter + 3;
+  const initialScrambleFrames = 4;
+  const framesPerCharacter = 5;
+  const settleFrames = 4;
+  const frameInterval = 72;
+  const totalFrames = initialScrambleFrames + finalValue.length * framesPerCharacter + settleFrames;
   let frame = 0;
 
   const draw = () => {
-    const lockedCharacters = Math.floor(frame / framesPerCharacter);
+    const lockedCharacters = Math.max(0, Math.floor((frame - initialScrambleFrames) / framesPerCharacter));
     target.textContent = [...finalValue].map((character, index) => {
       if (index < lockedCharacters) return character;
       return glyphs[(frame * 5 + index * 3) % glyphs.length];
@@ -41,10 +44,10 @@ function setupNameDecode() {
 
     frame += 1;
     if (frame <= totalFrames) {
-      window.setTimeout(draw, 58);
+      window.setTimeout(draw, frameInterval);
     } else {
       target.textContent = finalValue;
-      target.classList.add("is-decoded");
+      window.setTimeout(() => target.classList.add("is-decoded"), 260);
     }
   };
 
