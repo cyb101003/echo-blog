@@ -4,9 +4,9 @@ import SectionTitle from "@/components/SectionTitle.astro";
 import RepoExplorer from "@/components/RepoExplorer.astro";
 ---
 
-<BaseLayout title="项目 — echo" description="echo 的全部 GitHub 公开仓库，包括原创、Fork、归档、模板与镜像。">
+<BaseLayout title="项目 — echo" description="echo 的项目案例与 GitHub 公开仓库，包括私有项目、原创、Fork、归档、模板与镜像。">
   <section class="page-section">
-    <SectionTitle index="02" eyebrow="ALL PUBLIC REPOSITORIES" title="项目档案" description="不只挑选好看的项目。这里在每次构建时同步全部公开仓库，并保留上一次成功数据作为离线回退。" />
+    <SectionTitle index="02" eyebrow="PROJECTS & REPOSITORIES" title="项目档案" description="公开仓库会在构建时自动同步；不适合开源的项目只展示背景、职责和非敏感技术总结，不公开源码。" />
     <RepoExplorer />
   </section>
 </BaseLayout>

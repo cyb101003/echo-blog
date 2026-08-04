@@ -1,0 +1,43 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SectionTitle from "@/components/SectionTitle.astro";
+---
+
+<BaseLayout title="Horizon Startup — echo" description="echo 作为 CTO 参与举办的 Horizon Startup 黑客松项目案例；展示项目背景与技术职责，源码保持私有。">
+  <section class="page-section">
+    <SectionTitle
+      index="02A"
+      eyebrow="PRIVATE PROJECT / CTO"
+      title="Horizon Startup"
+      description="最近举办的 Horizon Startup 黑客松项目。我担任 CTO，项目源码保持私有，这里只公开能够安全展示的背景、职责与技术总结。"
+    />
+
+    <div class="article-grid">
+      <aside class="article-aside" aria-label="项目概要">
+        <p><span>角色</span>CTO</p>
+        <p><span>类型</span>黑客松 / 活动网站</p>
+        <p><span>官网</span>horizon-startup.com</p>
+        <p><span>年份</span>2026</p>
+        <p><span>源码</span>Private</p>
+      </aside>
+
+      <div class="prose">
+        <h2>项目背景</h2>
+        <p>我最近参与举办了 Horizon Startup 黑客松，并担任 CTO。这个项目包含活动网站以及与活动落地相关的技术工作，需要把需求、协作、开发和上线放进同一个真实场景中。</p>
+        <p><a class="button-primary" href="https://horizon-startup.com" target="_blank" rel="noreferrer">访问 Horizon Startup 官网 <span>↗</span></a></p>
+
+        <h2>我的技术职责</h2>
+        <ul>
+          <li>作为 CTO 推进项目的技术方向与交付。</li>
+          <li>参与活动网站相关的实现、维护和上线。</li>
+          <li>在活动需求、开发协作和使用体验之间做技术判断。</li>
+        </ul>
+
+        <h2>源码与公开边界</h2>
+        <p>项目展示不等于公开源码。仓库、环境变量、密钥、内部接口、部署凭据和内部文档都会继续保持私有；博客只展示项目背景、职责、公开截图和不涉及敏感实现的技术复盘。</p>
+
+        <p>之后可以继续补充公开截图、技术栈和成果数据，而不需要开放源码仓库。</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
