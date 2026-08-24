@@ -14,7 +14,7 @@ const { tag } = Astro.props;
 const posts = (await getCollection("posts", ({ data }) => !data.draft && data.tags.includes(tag))).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 ---
 
-<BaseLayout title={`#${tag} — echo`} description={`echo 关于 ${tag} 的文章。`}>
+<BaseLayout title={`#${tag} — Echo`} description={`Echo（陈宇博）关于 ${tag} 的文章。`}>
   <section class="page-section">
     <SectionTitle index="03A" eyebrow="FILTERED TOPIC" title={`#${tag}`} description={`共 ${posts.length} 篇文章。`} />
     <div class="post-list post-list-page">

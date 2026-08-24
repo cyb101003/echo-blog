@@ -1,11 +1,13 @@
 ---
-title: "你好，我是 echo"
+title: "你好，我是 Echo（陈宇博）"
+description: "Echo（陈宇博）的个人介绍：15 岁 builder、元创岛联合创始人、Horizon AI 产品经理，以及项目与成长记录。"
 publishedAt: 2026-08-01
+updatedAt: 2026-08-24
 tags: ["随笔", "开发日志"]
 featured: true
 ---
 
-我是 echo，一名 15 岁的 builder。我喜欢把脑子里觉得有趣的 ideas 真正做出来，而不是只停在“以后再试试”。现在我主要在学习 Web 开发、AI、Web3 和 Solidity，也会研究自己感兴趣的开源项目。
+我是 Echo（陈宇博），一名 15 岁的 builder，目前也是元创岛联合创始人、Horizon AI 产品经理。我喜欢把脑子里觉得有趣的 ideas 真正做出来，而不是只停在“以后再试试”。现在我主要在学习 Web 开发、AI、Web3 和 Solidity，也会研究自己感兴趣的开源项目。
 
 最近我参与举办了 [Horizon Startup](https://horizon-startup.com) 黑客松，并担任 CTO，负责技术方向以及活动网站相关的实现与交付。这个项目让我把网站开发、协作和上线放进一个真实活动场景里，而不只是完成一份练习。源码会留在私有仓库，但我会公开记录不涉及敏感实现的项目背景、技术判断和复盘。
 
@@ -21,3 +23,5 @@ featured: true
 - 对产品与开发方式的思考
 
 代码会尽量公开，结论也会持续更新。
+
+你也可以在[这篇知乎介绍](https://www.zhihu.com/pin/2075244898685562899)里了解我的近况。

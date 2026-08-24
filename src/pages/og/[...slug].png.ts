@@ -11,7 +11,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     { params: { slug: "home" }, props: { title: SITE.title, description: SITE.description } },
     ...posts.map(post => ({
       params: { slug: post.id },
-      props: { title: post.data.title, description: post.data.description ?? `echo 的文章：${post.data.title}` }
+      props: { title: post.data.title, description: post.data.description ?? `${SITE.author}的文章：${post.data.title}` }
     }))
   ];
 };
@@ -31,7 +31,7 @@ export const GET: APIRoute<OgProps> = ({ props }) => {
       <text x="78" y="235" fill="#f2f4f7" font-size="72" font-family="serif" font-weight="700">${title.slice(0, 24)}</text>
       <text x="78" y="315" fill="#f2f4f7" font-size="72" font-family="serif" font-weight="700">${title.slice(24, 48)}</text>
       <text x="78" y="415" fill="#9ba3ae" font-size="28" font-family="sans-serif">${description.slice(0, 58)}</text>
-      <text x="78" y="486" fill="#f2f4f7" font-size="24" font-family="monospace">github.com/cyb101003</text>
+      <text x="78" y="486" fill="#f2f4f7" font-size="24" font-family="monospace">Echo / 陈宇博 · github.com/cyb101003</text>
       <circle cx="1072" cy="476" r="50" fill="#83e1b1"/>
       <text x="1043" y="489" fill="#0a0c0f" font-size="32" font-family="monospace" font-weight="700">15</text>
     </svg>`;

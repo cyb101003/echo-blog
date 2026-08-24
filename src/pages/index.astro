@@ -25,27 +25,30 @@ const forks = github.repositories.filter(repo => repo.kind === "fork").length;
 <BaseLayout immersive>
   <section class="home-hero" aria-labelledby="home-title">
     <div class="hero-copy">
-      <p class="kicker" data-entrance style="--entrance-delay: 40ms">{SITE.age} Y/O DEVELOPER · <span class="hero-name-decode" data-decode-name="Echo" aria-label="Echo">Echo</span></p>
+      <p class="kicker hero-identity" data-entrance style="--entrance-delay: 40ms">
+        {SITE.age} Y/O BUILDER · <span class="hero-name-decode" data-decode-name={SITE.displayName} aria-label={SITE.displayName}>{SITE.displayName}</span><span class="hero-name-native">（{SITE.realName}）</span>
+      </p>
       <h1 id="home-title" data-entrance style="--entrance-delay: 120ms">把有趣的ideas落地</h1>
-      <p class="hero-intro" data-entrance style="--entrance-delay: 240ms">你好，我是 echo，一名 {SITE.age} 岁的builder，我在这里记录项目、文章，以及还没有答案的实验。</p>
+      <p class="hero-intro" data-entrance style="--entrance-delay: 240ms">你好，我是 {SITE.author}，一名 {SITE.age} 岁的 builder，也是元创岛联合创始人、Horizon AI 产品经理。我在这里记录项目、产品判断、文章，以及还没有答案的实验。</p>
       <div class="hero-actions" data-entrance style="--entrance-delay: 340ms">
         <a class="button-primary" href="/projects/">浏览项目 <span class="motion-arrow" aria-hidden="true">↗</span></a>
         <a class="button-quiet" href="/about/">认识我</a>
       </div>
-      <ul class="hero-meta" aria-label="关注方向" data-entrance style="--entrance-delay: 430ms">
-        <li><span>01</span>AI</li>
-        <li><span>02</span>Web</li>
-        <li><span>03</span>Open Source</li>
+      <ul class="hero-meta" aria-label="当前身份与个人介绍" data-entrance style="--entrance-delay: 430ms">
+        {SITE.roles.map((role, index) => (
+          <li><span>{String(index + 1).padStart(2, "0")} / {role.eyebrow}</span><strong>{role.label}</strong></li>
+        ))}
+        <li class="hero-meta-link"><a href={SITE.zhihu} target="_blank" rel="noreferrer"><span>03 / PROFILE</span><strong>知乎介绍 ↗</strong></a></li>
       </ul>
     </div>
 
-    <aside class="profile-panel" aria-label="echo 的个人头像" data-entrance style="--entrance-delay: 180ms">
+    <aside class="profile-panel" aria-label={`${SITE.author}的个人头像`} data-entrance style="--entrance-delay: 180ms">
       <div class="profile-image-wrap">
-        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="echo 的猫咪头像，戴着黑框眼镜" data-image-reveal />
+        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt={`${SITE.author}使用的猫咪头像，戴着黑框眼镜`} data-image-reveal />
       </div>
       <div class="profile-caption">
         <p><span class="status-dot" aria-hidden="true"></span>正在学习，也正在构建</p>
-        <a href="/about/" aria-label="查看关于 echo 的更多信息">ABOUT / 2026 ↗</a>
+        <a href="/about/" aria-label={`查看关于${SITE.author}的更多信息`}>ABOUT / 2026 ↗</a>
       </div>
     </aside>
   </section>

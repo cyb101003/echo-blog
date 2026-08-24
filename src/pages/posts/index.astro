@@ -7,7 +7,7 @@ import PostCard from "@/components/PostCard.astro";
 const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 ---
 
-<BaseLayout title="文章 — echo" description="echo 的技术文章、开发日志和学习记录。">
+<BaseLayout title="文章 — Echo" description="Echo（陈宇博）的技术文章、产品思考、开发日志和学习记录。">
   <section class="page-section">
     <SectionTitle index="03" eyebrow="WRITING & DEV LOGS" title="文章与记录" description="写清楚做了什么，也尽量解释为什么这样做。文章使用 Markdown 管理，并自动进入标签、归档、搜索和 RSS。" />
     <div class="post-list post-list-page">

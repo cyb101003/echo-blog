@@ -9,7 +9,7 @@ type Props = {
   title?: string;
   description?: string;
   image?: string;
-  type?: "website" | "article";
+  type?: "website" | "article" | "profile";
   publishedAt?: Date;
   updatedAt?: Date;
   noindex?: boolean;
@@ -29,46 +29,69 @@ const {
   immersive = false
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
-const imageUrl = new URL(image, Astro.site ?? Astro.url);
-const structuredData = type === "article"
+const siteOrigin = Astro.site ?? new URL(SITE.url);
+const canonical = new URL(Astro.url.pathname, siteOrigin);
+const imageUrl = new URL(image, siteOrigin);
+const baiduVerification = import.meta.env.BAIDU_SITE_VERIFICATION?.trim();
+const personSchema = {
+  "@type": "Person",
+  "@id": `${canonical.origin}/#person`,
+  name: SITE.author,
+  alternateName: [SITE.displayName, SITE.realName],
+  description: SITE.description,
+  url: canonical.origin,
+  image: new URL("/assets/echo-avatar.jpg", siteOrigin).href,
+  jobTitle: SITE.roles.map(role => role.label),
+  affiliation: SITE.roles.map(role => ({ "@type": "Organization", name: role.organization })),
+  sameAs: [SITE.github, SITE.youtube, SITE.x],
+  subjectOf: { "@type": "CreativeWork", name: "Echo（陈宇博）的个人介绍", url: SITE.zhihu },
+  knowsAbout: ["AI 产品", "Web 开发", "开源", "Web3", "Solidity"]
+};
+const websiteSchema = {
+  "@type": "WebSite",
+  "@id": `${canonical.origin}/#website`,
+  name: SITE.title,
+  description: SITE.description,
+  url: canonical.origin,
+  inLanguage: SITE.locale,
+  publisher: { "@id": `${canonical.origin}/#person` },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${canonical.origin}/search/?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
+const articleSchema = type === "article"
   ? {
-      "@context": "https://schema.org",
       "@type": "BlogPosting",
       headline: title,
       description,
       image: imageUrl.href,
       datePublished: publishedAt?.toISOString(),
       ...(updatedAt ? { dateModified: updatedAt.toISOString() } : {}),
-      author: { "@type": "Person", name: SITE.author, url: SITE.github },
-      mainEntityOfPage: canonical.href
+      author: { "@id": `${canonical.origin}/#person` },
+      publisher: { "@id": `${canonical.origin}/#person` },
+      inLanguage: SITE.locale,
+      mainEntityOfPage: canonical.href,
+      isPartOf: { "@id": `${canonical.origin}/#website` }
     }
-  : {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Person",
-          "@id": `${canonical.origin}/#person`,
-          name: SITE.author,
-          url: canonical.origin,
-          sameAs: [SITE.github]
-        },
-        {
-          "@type": "WebSite",
-          "@id": `${canonical.origin}/#website`,
-          name: SITE.title,
-          description: SITE.description,
-          url: canonical.origin,
-          inLanguage: SITE.locale,
-          publisher: { "@id": `${canonical.origin}/#person` },
-          potentialAction: {
-            "@type": "SearchAction",
-            target: `${canonical.origin}/search/?q={search_term_string}`,
-            "query-input": "required name=search_term_string"
-          }
-        }
-      ]
-    };
+  : undefined;
+const profilePageSchema = type === "profile"
+  ? {
+      "@type": "ProfilePage",
+      "@id": canonical.href,
+      name: title,
+      description,
+      url: canonical.href,
+      inLanguage: SITE.locale,
+      mainEntity: { "@id": `${canonical.origin}/#person` },
+      isPartOf: { "@id": `${canonical.origin}/#website` }
+    }
+  : undefined;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [personSchema, websiteSchema, ...(articleSchema ? [articleSchema] : []), ...(profilePageSchema ? [profilePageSchema] : [])]
+};
 ---
 
 <!doctype html>
@@ -79,7 +102,10 @@ const structuredData = type === "article"
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#0a0c0f" />
     <meta name="color-scheme" content="dark" />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large"} />
+    <meta name="keywords" content={SITE.keywords.join(", ")} />
+    <meta name="application-name" content={SITE.title} />
+    {baiduVerification && <meta name="baidu-site-verification" content={baiduVerification} />}
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content={SITE.author} />
@@ -87,7 +113,7 @@ const structuredData = type === "article"
     <link rel="icon" type="image/jpeg" href="/assets/echo-avatar.jpg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
-    <meta property="og:type" content={type} />
+    <meta property="og:type" content={type === "profile" ? "profile" : type} />
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />

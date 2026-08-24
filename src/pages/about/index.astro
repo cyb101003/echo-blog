@@ -5,27 +5,42 @@ import github from "@/data/github.json";
 import { SITE } from "@/config";
 ---
 
-<BaseLayout title="关于 echo" description="关于 15 岁开发者 echo，以及这个博客存在的原因。">
+<BaseLayout type="profile" title="关于 Echo（陈宇博）" description="认识 Echo（陈宇博）：15 岁 builder、元创岛联合创始人、Horizon AI 产品经理，以及他的项目与成长记录。">
   <section class="page-section about-page">
-    <SectionTitle index="01A" eyebrow="ABOUT THE DEVELOPER" title="关于 echo" description="这里先只保留已经确认的信息。经历、所在地和联系方式可以在以后继续补充。" />
+    <SectionTitle index="01A" eyebrow="ABOUT / IDENTITY" title="Echo（陈宇博）" description="15 岁 builder · 元创岛联合创始人 · Horizon AI 产品经理" />
 
     <div class="about-profile" data-reveal>
       <div class="about-portrait">
-        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="echo 的猫咪头像，戴着黑框眼镜" data-image-reveal />
+        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt={`${SITE.author}使用的猫咪头像，戴着黑框眼镜`} data-image-reveal />
         <p><strong>{SITE.age}</strong><span>YEARS OLD</span></p>
       </div>
       <div class="about-story">
-        <p class="about-lead">我是 echo，一名 15 岁的技术开发者。</p>
-        <p>我会把学习过程、项目实现和仍然没有解决的问题记录在这里。相比只展示完成品，我更希望保留每次尝试背后的判断和变化。</p>
+        <p class="about-lead">我是 {SITE.author}。比起只给自己贴上“开发者”的标签，我更喜欢 builder——把想法变成真正能运行、能被使用的东西。</p>
+        <p>目前我是<strong>元创岛联合创始人</strong>和 <strong>Horizon AI 产品经理</strong>。我会在技术实现、产品判断与真实项目之间来回切换，也会把过程中的取舍、踩过的坑和仍未想明白的问题留在这里。</p>
+        <p>我曾参与举办 <a href="https://horizon-startup.com" target="_blank" rel="noreferrer">Horizon Startup</a> 黑客松并担任 CTO，负责技术方向与活动网站的实现和交付。这些真实经历比一串技能名更能说明我正在做什么。</p>
+
+        <div class="about-roles" aria-label="当前身份">
+          <article>
+            <span>01 / CO-FOUNDER</span>
+            <h2>元创岛联合创始人</h2>
+            <p>以联合创始人的身份参与元创岛的项目推进与长期建设。</p>
+          </article>
+          <article>
+            <span>02 / AI PRODUCT</span>
+            <h2>Horizon AI 产品经理</h2>
+            <p>以产品经理的身份参与 AI 产品工作，让技术能力落到具体体验与真实需求上。</p>
+          </article>
+        </div>
+
         <p>目前 GitHub 账号 <a href={SITE.github} target="_blank" rel="noreferrer">@cyb101003</a> 有 {github.repositories.length} 个公开仓库，其中 {github.repositories.filter(repo => repo.kind === "original").length} 个原创项目、{github.repositories.filter(repo => repo.kind === "fork").length} 个 Fork。</p>
-        <div class="about-placeholders" aria-label="待补充资料">
-          <div><span>所在地</span><strong>待补充</strong></div>
-          <div><span>YouTube</span><strong>待补充</strong></div>
-          <div><span>X / Twitter</span><strong>待补充</strong></div>
+        <div class="about-credentials" aria-label="个人资料与外部链接">
+          <div><span>姓名</span><strong>Echo（陈宇博）</strong></div>
+          <div><span>GitHub</span><a href={SITE.github} target="_blank" rel="noreferrer">@cyb101003 ↗</a></div>
+          <div><span>知乎</span><a href={SITE.zhihu} target="_blank" rel="noreferrer">查看个人介绍 ↗</a></div>
         </div>
         <div class="about-actions">
           <a class="button-primary" href="/projects/">查看项目 <span class="motion-arrow">↗</span></a>
-          <a class="button-quiet" href={SITE.github} target="_blank" rel="noreferrer">访问 GitHub</a>
+          <a class="button-quiet" href={SITE.zhihu} target="_blank" rel="noreferrer">知乎介绍 ↗</a>
         </div>
       </div>
     </div>

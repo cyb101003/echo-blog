@@ -8,10 +8,10 @@ export async function GET(context: APIContext) {
   return rss({
     title: SITE.title,
     description: SITE.description,
-    site: context.site ?? "https://cyb101003.github.io",
+    site: context.site ?? SITE.url,
     items: posts.map(post => ({
       title: post.data.title,
-      description: post.data.description ?? `echo 的文章：${post.data.title}`,
+      description: post.data.description ?? `${SITE.author}的文章：${post.data.title}`,
       pubDate: post.data.publishedAt,
       link: `/posts/${post.id}/`,
       categories: post.data.tags

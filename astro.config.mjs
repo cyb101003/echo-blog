@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 
 export default defineConfig({
-  site: process.env.SITE_URL ?? "https://cyb101003.github.io",
+  site: process.env.SITE_URL ?? "https://echobb.me",
   integrations: [sitemap()],
   markdown: {
     shikiConfig: {

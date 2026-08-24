@@ -1,5 +1,5 @@
 {
-  "syncedAt": "2026-08-01T20:20:35.737Z",
+  "syncedAt": "2026-08-24T08:03:08.513Z",
   "profile": {
     "login": "cyb101003",
     "htmlUrl": "https://github.com/cyb101003",
@@ -12,7 +12,7 @@
       "name": "echo-blog",
       "url": "https://github.com/cyb101003/echo-blog",
       "description": "Personal technical blog for echo, built with Astro.",
-      "language": null,
+      "language": "CSS",
       "topics": [],
       "stars": 0,
       "forks": 0,
@@ -22,8 +22,8 @@
       "archived": false,
       "template": false,
       "mirror": false,
-      "updatedAt": "2026-08-01T20:08:18Z",
-      "pushedAt": "2026-08-01T20:08:14Z"
+      "updatedAt": "2026-08-04T21:58:20Z",
+      "pushedAt": "2026-08-04T21:58:15Z"
     },
     {
       "id": 1250260570,

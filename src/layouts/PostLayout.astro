@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { SITE } from "@/config";
 
 type Props = {
   title: string;
@@ -14,11 +15,11 @@ type Props = {
 
 const { title, description, publishedAt, updatedAt, tags, slug, previous, next } = Astro.props;
 const date = publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
-const metaDescription = description ?? `echo 的文章：${title}`;
+const metaDescription = description ?? `${SITE.author}的文章：${title}`;
 ---
 
 <BaseLayout
-  title={`${title} — echo`}
+  title={`${title} — Echo`}
   description={metaDescription}
   image={`/og/${slug}.png`}
   type="article"
@@ -38,7 +39,7 @@ const metaDescription = description ?? `echo 的文章：${title}`;
     </header>
     <div class="article-grid" data-reveal>
       <aside class="article-aside" aria-label="文章信息">
-        <p><span>作者</span>echo</p>
+        <p><span>作者</span>{SITE.author}</p>
         <p><span>发布</span>{date}</p>
         {updatedAt && <p><span>更新</span>{updatedAt.toLocaleDateString("zh-CN")}</p>}
         <nav data-toc aria-label="文章目录"><p>目录</p><ol></ol></nav>

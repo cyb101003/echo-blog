@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "sync:github": "node scripts/sync-github.mjs",
-    "budget": "node scripts/check-budget.mjs"
+    "budget": "node scripts/check-budget.mjs",
+    "seo:baidu": "node scripts/submit-baidu.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
