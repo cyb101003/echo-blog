@@ -1,5 +1,5 @@
 export const SITE = {
-  url: "https://echobb.me",
+  url: "https://www.echobb.me",
   title: "Echo（陈宇博）— 个人技术博客",
   shortTitle: "Echo/",
   description: "Echo（陈宇博）的个人技术博客：15 岁 builder、元创岛联合创始人、Horizon AI 产品经理，记录项目、产品思考、文章与实验。",

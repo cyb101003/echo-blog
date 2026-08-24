@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import http from "node:http";
 
-const site = (process.env.BAIDU_SITE ?? "https://echobb.me").replace(/\/$/, "");
+const site = (process.env.BAIDU_SITE ?? "https://www.echobb.me").replace(/\/$/, "");
 const token = process.env.BAIDU_PUSH_TOKEN?.trim();
 
 if (!token) {
