@@ -8,6 +8,6 @@ export const privateProjects = [
     label: "私有案例",
     action: "查看案例 ↗",
     external: false,
-    facts: ["CTO", "horizon-startup.com", "Closed Source", "2026"]
+    facts: ["CTO", "horizon-s.cn", "Closed Source", "2026"]
   }
 ] as const;
