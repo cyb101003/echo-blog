@@ -126,6 +126,13 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
 
     if (mobileCount) mobileCount.textContent = String(headings.length).padStart(2, "0");
 
+    // 全文没有任何 h2/h3 时，目录、浮动按钮和抽屉都没有内容可放，直接移除避免出现空的「目录」标签
+    if (!headings.length) {
+      document.querySelector("[data-toc]")?.remove();
+      document.querySelector("[data-toc-fab]")?.remove();
+      document.querySelector("[data-toc-sheet]")?.remove();
+    }
+
     body.querySelectorAll("pre").forEach(block => {
       const button = document.createElement("button");
       button.type = "button";
