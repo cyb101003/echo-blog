@@ -1,0 +1,160 @@
+---
+/**
+ * Thinking Orb — 移植 libraries.dev thinking-orbs 的「working」状态：
+ * 点阵沿倾斜轨道绕球体运行，纯 canvas 2D 绘制，无 WebGL、无滤镜。
+ * 尺寸与配色跟随 currentColor，reduced-motion 下只画静态一帧。
+ */
+type Props = { size?: "sm" | "md"; class?: string; label?: string };
+const { size = "md", class: className, label = "正在加载" } = Astro.props;
+---
+
+<canvas
+  class:list={["thinking-orb", size === "sm" && "thinking-orb--sm", className]}
+  width="176"
+  height="176"
+  role="img"
+  aria-label={label}
+  data-thinking-orb
+></canvas>
+
+<script>
+  type OrbRuntime = Window & { __orbObservers?: IntersectionObserver[] };
+
+  function setupThinkingOrbs() {
+    document.querySelectorAll<HTMLCanvasElement>("[data-thinking-orb]").forEach(canvas => {
+      if (canvas.dataset.ready === "true") return;
+      canvas.dataset.ready = "true";
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssSize = canvas.clientWidth || 88;
+      const pixel = Math.round(cssSize * dpr);
+      canvas.width = pixel;
+      canvas.height = pixel;
+
+      const color = getComputedStyle(canvas).color || "#83e1b1";
+      const match = color.match(/rgba?\(([^)]+)\)/);
+      const channels = match ? match[1].split(",").map(Number) : [131, 225, 177];
+      const [red, green, blue] = channels;
+
+      const RINGS = [
+        { tiltX: 1.15, tiltZ: 0.6, radius: 0.72, count: 34, speed: 0.55 },
+        { tiltX: -0.5, tiltZ: -0.9, radius: 0.58, count: 26, speed: -0.78 },
+        { tiltX: 0.25, tiltZ: 1.9, radius: 0.86, count: 30, speed: 0.38 }
+      ];
+
+      type Dot = { ring: (typeof RINGS)[number]; phase: number; jitter: number };
+      const dots: Dot[] = RINGS.flatMap(ring =>
+        Array.from({ length: ring.count }, (_, index) => ({
+          ring,
+          phase: (index / ring.count) * Math.PI * 2,
+          jitter: 0.86 + Math.random() * 0.28
+        }))
+      );
+
+      const draw = (elapsed: number) => {
+        const time = reduced ? 0 : elapsed / 1000;
+        const center = pixel / 2;
+        const scaleBase = pixel * 0.5;
+        context.clearRect(0, 0, pixel, pixel);
+
+        const projected = dots.map(dot => {
+          const { ring, phase, jitter } = dot;
+          const angle = phase + time * ring.speed;
+          const ringRadius = scaleBase * ring.radius * 0.82 * jitter;
+          let x = Math.cos(angle) * ringRadius;
+          let y = Math.sin(angle) * ringRadius;
+          let z = 0;
+
+          // 绕 X 轴倾斜
+          const cosX = Math.cos(ring.tiltX);
+          const sinX = Math.sin(ring.tiltX);
+          const y1 = y * cosX - z * sinX;
+          const z1 = y * sinX + z * cosX;
+          y = y1;
+          z = z1;
+
+          // 绕 Z 轴偏转
+          const cosZ = Math.cos(ring.tiltZ);
+          const sinZ = Math.sin(ring.tiltZ);
+          const x1 = x * cosZ - y * sinZ;
+          const y2 = x * sinZ + y * cosZ;
+          x = x1;
+          y = y2;
+
+          // 整体缓慢自转
+          const spin = time * 0.22;
+          const cosS = Math.cos(spin);
+          const sinS = Math.sin(spin);
+          const x2 = x * cosS - z * sinS;
+          const z2 = x * sinS + z * cosS;
+          x = x2;
+          z = z2;
+
+          const perspective = 1.9;
+          const depth = perspective / (perspective - z / scaleBase);
+          return {
+            x: center + x * depth,
+            y: center + y * depth,
+            depth,
+            radius: (pixel * 0.0135) * depth * jitter,
+            alpha: Math.max(0.12, Math.min(0.95, (depth - 0.55) * 0.85))
+          };
+        });
+
+        projected.sort((a, b) => a.depth - b.depth);
+        projected.forEach(dot => {
+          context.beginPath();
+          context.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+          context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${dot.alpha.toFixed(3)})`;
+          context.fill();
+        });
+      };
+
+      if (reduced) {
+        draw(0);
+        return;
+      }
+
+      let frame = 0;
+      let running = false;
+      const start = performance.now();
+
+      const loop = (now: number) => {
+        if (!running) return;
+        draw(now - start);
+        frame = window.requestAnimationFrame(loop);
+      };
+
+      const begin = () => {
+        if (running) return;
+        running = true;
+        frame = window.requestAnimationFrame(loop);
+      };
+
+      const stop = () => {
+        running = false;
+        window.cancelAnimationFrame(frame);
+      };
+
+      if ("IntersectionObserver" in window) {
+        const runtime = window as OrbRuntime;
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => (entry.isIntersecting ? begin() : stop()));
+        }, { threshold: 0.05 });
+        observer.observe(canvas);
+        (runtime.__orbObservers ??= []).push(observer);
+      } else {
+        begin();
+      }
+
+      document.addEventListener("astro:before-swap", stop, { once: true });
+    });
+  }
+
+  document.addEventListener("astro:page-load", setupThinkingOrbs);
+  setupThinkingOrbs();
+</script>

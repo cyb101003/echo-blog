@@ -26,7 +26,9 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
   publishedAt={publishedAt}
   updatedAt={updatedAt}
 >
-  <div class="reading-progress" aria-hidden="true"><span data-reading-progress></span></div>
+  <div class="reading-ticks" data-reading-ticks aria-hidden="true">
+    {Array.from({ length: 56 }, () => <i />)}
+  </div>
   <article class="article-shell" data-article-slug={slug}>
     <header class="article-header" data-reveal>
       <a class="back-link" href="/posts/">← 返回文章</a>
@@ -74,6 +76,16 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
     )}
   </article>
   <button class="back-to-top" type="button" data-back-to-top aria-label="返回顶部">↑</button>
+  <button class="toc-fab" type="button" data-toc-fab aria-expanded="false" aria-controls="toc-sheet">
+    <span aria-hidden="true">≡</span> 目录 <b data-toc-count>00</b>
+  </button>
+  <div class="toc-sheet" id="toc-sheet" data-toc-sheet data-open="false" aria-hidden="true">
+    <div class="toc-sheet-head">
+      <p>ON THIS PAGE / 目录</p>
+      <button type="button" data-toc-close aria-label="关闭目录">关闭</button>
+    </div>
+    <ol data-toc-mobile></ol>
+  </div>
 </BaseLayout>
 
 <script>
@@ -83,6 +95,8 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
     body.dataset.ready = "true";
 
     const toc = document.querySelector("[data-toc] ol");
+    const mobileToc = document.querySelector("[data-toc-mobile]");
+    const mobileCount = document.querySelector("[data-toc-count]");
     const headings = [...body.querySelectorAll("h2, h3")];
     headings.forEach((heading, index) => {
       if (!heading.id) heading.id = `section-${index + 1}`;
@@ -101,8 +115,16 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
         link.textContent = heading.textContent?.replace(/#$/, "") || `章节 ${index + 1}`;
         item.append(link);
         toc.append(item);
+
+        if (mobileToc) {
+          const mobileItem = item.cloneNode(true) as HTMLLIElement;
+          mobileItem.querySelector("a")?.addEventListener("click", () => closeSheet());
+          mobileToc.append(mobileItem);
+        }
       }
     });
+
+    if (mobileCount) mobileCount.textContent = String(headings.length).padStart(2, "0");
 
     body.querySelectorAll("pre").forEach(block => {
       const button = document.createElement("button");
@@ -124,20 +146,58 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
 
     const article = document.querySelector("[data-article-slug]");
     const slug = article instanceof HTMLElement ? article.dataset.articleSlug : "";
-    const progress = document.querySelector("[data-reading-progress]");
+    const ticks = [...document.querySelectorAll<HTMLElement>("[data-reading-ticks] i")];
     const topButton = document.querySelector("[data-back-to-top]");
-    const tocLinks = [...document.querySelectorAll("[data-toc] a")];
+    const tocLinks = [...document.querySelectorAll("[data-toc] a, [data-toc-mobile] a")];
+    const fab = document.querySelector<HTMLButtonElement>("[data-toc-fab]");
+    const sheet = document.querySelector<HTMLElement>("[data-toc-sheet]");
     const controller = new AbortController();
-    let ticking = false;
+    const { signal } = controller;
+    let activeTick = -1;
+
+    function setSheet(open: boolean) {
+      if (!fab || !sheet) return;
+      fab.setAttribute("aria-expanded", String(open));
+      fab.style.visibility = open ? "hidden" : "";
+      sheet.dataset.open = String(open);
+      sheet.setAttribute("aria-hidden", String(!open));
+      document.documentElement.style.overflow = open ? "hidden" : "";
+      if (open) sheet.querySelector<HTMLAnchorElement>("a")?.focus({ preventScroll: true });
+      else fab.focus({ preventScroll: true });
+    }
+
+    function closeSheet() {
+      if (sheet?.dataset.open === "true") setSheet(false);
+    }
+
+    fab?.addEventListener("click", () => setSheet(sheet?.dataset.open !== "true"), { signal });
+    document.querySelector("[data-toc-close]")?.addEventListener("click", closeSheet, { signal });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeSheet();
+    }, { signal });
+
+    const paintTicks = (value: number) => {
+      const total = ticks.length;
+      if (!total) return;
+      const count = Math.round(Math.max(0, Math.min(1, value)) * total);
+      if (count === activeTick) return;
+      for (let index = 0; index < total; index += 1) {
+        const tick = ticks[index];
+        if (!tick) continue;
+        const on = index < count;
+        tick.classList.toggle("is-on", on);
+        tick.classList.toggle("is-head", on && index === count - 1);
+      }
+      activeTick = count;
+    };
 
     const update = () => {
-      ticking = false;
       const bodyTop = body.getBoundingClientRect().top + window.scrollY;
       const start = bodyTop - window.innerHeight * 0.22;
       const end = bodyTop + body.offsetHeight - window.innerHeight * 0.58;
       const value = Math.max(0, Math.min(1, (window.scrollY - start) / Math.max(1, end - start)));
 
-      if (progress instanceof HTMLElement) progress.style.transform = `scaleX(${value})`;
+      paintTicks(value);
       if (topButton instanceof HTMLElement) topButton.classList.toggle("visible", window.scrollY > 600);
 
       const activeHeading = [...headings].reverse().find(heading => heading.getBoundingClientRect().top <= 170) || headings[0];
@@ -160,15 +220,20 @@ const metaDescription = description ?? `${SITE.author}的文章：${title}`;
       }
     };
 
+    // 同步 + 16ms 节流：不依赖 requestAnimationFrame，
+    // 避免 rAF 不派发时 ticking 卡死、后续滚动全部被吞掉
+    let lastRun = 0;
     const requestUpdate = () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(update);
+      if (!document.contains(body)) return;
+      const now = performance.now();
+      if (now - lastRun < 16) return;
+      lastRun = now;
+      update();
     };
 
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
     window.addEventListener("scroll", requestUpdate, { passive: true, signal: controller.signal });
     window.addEventListener("resize", requestUpdate, { passive: true, signal: controller.signal });
-    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
     requestUpdate();
     topButton?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }), { signal: controller.signal });
   }

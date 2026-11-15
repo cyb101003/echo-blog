@@ -1,0 +1,1017 @@
+/**
+ * 组件增强层
+ *
+ * 视觉规则与 global.css 一致：深色、无大面积渐变、--radius: 0、
+ * 1px 描边、等宽字体小标签、强调色 --accent。
+ * 这些交互形态移植自 BoardUI / Bencho / HeroUI Pro / libraries.dev，
+ * 但按本站的 token 重写，不引入 React、Tailwind 或运行时依赖。
+ */
+
+/* ============================================================
+   1. Kbd — 快捷键胶囊（BoardUI Kbd）
+   ============================================================ */
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-raised);
+  color: var(--muted);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.kbd--wide {
+  min-width: 34px;
+}
+
+/* ============================================================
+   2. Command Palette — ⌘K（BoardUI Command Palette）
+   规格：12vh 处下落 10px + 4px 模糊收清，200ms；
+   40px 搜索行 + 32px 行高；滑行高亮；行内 @starting-style 上浮。
+   ============================================================ */
+
+.cmdk {
+  position: fixed;
+  z-index: 900;
+  inset: 0;
+  display: none;
+}
+
+.cmdk[data-open="true"] {
+  display: block;
+}
+
+.cmdk-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(4 6 8 / 0.66);
+  animation: cmdk-fade 200ms ease both;
+}
+
+.cmdk-panel {
+  position: relative;
+  width: min(calc(100% - 28px), 640px);
+  margin: 12vh auto 0;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  box-shadow: 0 40px 90px -50px #000;
+  animation: cmdk-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cmdk-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cmdk-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.cmdk-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cmdk-search > span[aria-hidden] {
+  color: var(--accent);
+  font: 700 0.9rem/1 var(--mono);
+}
+
+.cmdk-input {
+  flex: 1;
+  min-width: 0;
+  height: 54px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.cmdk-input::placeholder {
+  color: var(--faint);
+}
+
+.cmdk-clear {
+  display: none;
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  background: var(--panel-raised);
+  color: var(--muted);
+  font: 700 0.8rem/1 var(--mono);
+  cursor: pointer;
+}
+
+.cmdk-clear[data-show="true"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: cmdk-pop 140ms ease both;
+}
+
+@keyframes cmdk-pop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.cmdk-list {
+  position: relative;
+  max-height: min(54vh, 400px);
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: height 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cmdk-list::before {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: block;
+  height: 0;
+  content: "";
+}
+
+.cmdk-list[data-scrolled="true"] {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 100%);
+}
+
+.cmdk-highlight {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 6px;
+  left: 6px;
+  height: 36px;
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease;
+}
+
+.cmdk-highlight[data-visible="true"] {
+  opacity: 1;
+}
+
+.cmdk-group {
+  position: relative;
+  z-index: 1;
+}
+
+.cmdk-group-title {
+  padding: 12px 10px 6px;
+  color: var(--faint);
+  font: 700 0.64rem/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cmdk-item {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@starting-style {
+  .cmdk-item {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.cmdk-item {
+  opacity: 1;
+  transform: none;
+  transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
+}
+
+.cmdk-item[aria-selected="true"] {
+  color: var(--text);
+}
+
+.cmdk-item-mark {
+  color: var(--faint);
+  font: 700 0.7rem/1 var(--mono);
+  text-align: center;
+}
+
+.cmdk-item[aria-selected="true"] .cmdk-item-mark {
+  color: var(--accent);
+}
+
+.cmdk-item-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 0;
+}
+
+.cmdk-item-title {
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmdk-item-hint {
+  overflow: hidden;
+  color: var(--faint);
+  font: 500 0.7rem/1.2 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmdk-item mark {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.cmdk-empty {
+  padding: 26px 14px 30px;
+  color: var(--faint);
+  font: 500 0.8rem/1.5 var(--mono);
+  text-align: center;
+}
+
+.cmdk-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font: 500 0.68rem/1 var(--mono);
+}
+
+.cmdk-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 顶栏触发按钮 */
+
+.site-header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.site-nav {
+  min-width: 0;
+}
+
+.nav-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  font: 700 0.72rem/1 var(--mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.nav-command:hover,
+.nav-command:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.nav-command .kbd {
+  height: 18px;
+  min-width: 30px;
+}
+
+@media (max-width: 640px) {
+  .nav-command {
+    justify-content: center;
+    min-width: 36px;
+    padding: 0 9px;
+  }
+
+  .nav-command span[data-label] {
+    display: none;
+  }
+
+  .nav-command .kbd {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .nav-command {
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 38px;
+    margin-top: 22px;
+    padding: 0 12px;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+  }
+
+  .nav-command .kbd {
+    margin-left: auto;
+  }
+}
+
+/* ============================================================
+   3. Border Beam — 边框流光（libraries.dev border-beam）
+   技术：@property 角度 + conic-gradient + mask-composite 抠出 1px 描边
+   ============================================================ */
+
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.beam {
+  position: relative;
+  isolation: isolate;
+}
+
+.beam::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 286deg,
+    color-mix(in srgb, var(--accent) 15%, transparent) 292deg,
+    var(--accent) 300deg,
+    #f2f4f7 305deg,
+    var(--accent) 310deg,
+    color-mix(in srgb, var(--accent) 15%, transparent) 318deg,
+    transparent 324deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam-rotate 5.4s linear infinite;
+  content: "";
+  pointer-events: none;
+}
+
+@keyframes beam-rotate {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+/* 边角处需要盖住外层 1px 描边的溢出 */
+
+.beam-sm::before {
+  animation-duration: 4.2s;
+}
+
+/* ============================================================
+   4. Reading Ticks — 分段阅读刻度（Bencho Progress Ticks）
+   ============================================================ */
+
+.reading-ticks {
+  position: fixed;
+  z-index: 80;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  gap: 2px;
+  height: 2px;
+  padding: 0;
+  pointer-events: none;
+}
+
+.reading-ticks i {
+  flex: 1;
+  min-width: 1px;
+  background: #1b2027;
+  transition: background-color 220ms ease;
+}
+
+.reading-ticks i.is-on {
+  background: var(--accent);
+}
+
+.reading-ticks i.is-head {
+  background: #f2f4f7;
+}
+
+/* 顶栏在所有断点都是固定在顶部的：宽屏 72px，窄屏 64px。
+   刻度贴在它下沿，否则会被 z-index 更高的页头盖住。 */
+.reading-ticks {
+  top: 72px;
+}
+
+@media (max-width: 639px) {
+  .reading-ticks {
+    top: 64px;
+  }
+}
+
+/* 保留原进度条作为降级：无 JS 时不可见 */
+
+.reading-progress {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-ticks i {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   5. Floating TOC — 移动端浮动目录（HeroUI Pro Floating TOC）
+   ============================================================ */
+
+.toc-fab {
+  position: fixed;
+  z-index: 120;
+  right: 16px;
+  bottom: 78px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+  font: 700 0.72rem/1 var(--mono);
+  letter-spacing: 0.04em;
+  box-shadow: 0 16px 40px -24px #000;
+  cursor: pointer;
+}
+
+.toc-fab b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.toc-fab[aria-expanded="true"] {
+  border-color: var(--accent);
+}
+
+.toc-sheet {
+  position: fixed;
+  z-index: 119;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: 62vh;
+  padding: 18px 18px 28px;
+  border-top: 1px solid var(--line-strong);
+  background: var(--panel);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform: translateY(100%);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toc-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+.toc-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.toc-sheet-head > p {
+  margin: 0;
+  color: var(--faint);
+  font: 700 0.64rem/1 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.toc-sheet-head > button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.toc-sheet-head > button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.toc-sheet ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-sheet a {
+  display: block;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+
+.toc-sheet a[aria-current="location"] {
+  color: var(--accent);
+}
+
+.toc-sheet .toc-subitem a {
+  padding-left: 14px;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .toc-fab {
+    display: inline-flex;
+  }
+
+  /* 移动端目录收进浮动面板，避免正文被重复目录压到下面 */
+  .article-aside nav {
+    display: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .toc-sheet {
+    display: none;
+  }
+}
+
+/* ============================================================
+   6. Magnetic Button — 磁吸（Bencho Magnetic Select）
+   ============================================================ */
+
+[data-magnetic] {
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  will-change: transform;
+}
+
+[data-magnetic][data-magnetized="true"] {
+  transition: transform 90ms ease-out, color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  [data-magnetic] {
+    transform: none !important;
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  }
+}
+
+/* ============================================================
+   7. Slide to Confirm — 滑动确认（Bencho Slide to Confirm）
+   ============================================================ */
+
+.slide-confirm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slide-confirm[hidden] {
+  display: none;
+}
+
+.slide-confirm > p {
+  margin: 0;
+  color: var(--faint);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.slide-track {
+  position: relative;
+  flex: 1;
+  max-width: 240px;
+  height: 44px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.slide-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.slide-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 26px;
+  color: var(--faint);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.slide-handle {
+  position: absolute;
+  z-index: 1;
+  top: 3px;
+  left: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 800 0.9rem/1 var(--mono);
+  cursor: grab;
+  touch-action: none;
+}
+
+.slide-handle:active {
+  cursor: grabbing;
+}
+
+.slide-track[data-done="true"] {
+  border-color: var(--accent);
+}
+
+.slide-track[data-done="true"] .slide-label {
+  opacity: 0;
+}
+
+/* ============================================================
+   8. Contributions — 提交热力图（BoardUI Contributions Card）
+   ============================================================ */
+
+.contributions {
+  /* 与 .home-stats 共用同一套横向内缩，避免溢出到右侧装饰带 */
+  margin: 28px max(24px, 50vw - 590px) 0;
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.contributions-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.contributions-head p {
+  margin: 0;
+  color: var(--faint);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.contributions-head strong {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.contributions-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 10px);
+  grid-auto-columns: 10px;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  height: fit-content;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.contributions-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.contributions-grid i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: #1f262f;
+}
+
+.contributions-grid i[data-level="1"] {
+  background: color-mix(in srgb, var(--accent) 26%, #1f262f);
+}
+
+.contributions-grid i[data-level="2"] {
+  background: color-mix(in srgb, var(--accent) 52%, #1f262f);
+}
+
+.contributions-grid i[data-level="3"] {
+  background: color-mix(in srgb, var(--accent) 76%, #1f262f);
+}
+
+.contributions-grid i[data-level="4"] {
+  background: var(--accent);
+}
+
+.contributions-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  color: var(--faint);
+  font: 500 0.68rem/1 var(--mono);
+}
+
+.contributions-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.contributions-legend i {
+  width: 9px;
+  height: 9px;
+  background: #1f262f;
+}
+
+/* ============================================================
+   9. Timeline — 时间线（HeroUI Pro Timeline）
+   ============================================================ */
+
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--line-strong);
+}
+
+.timeline li {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 0 0 30px 26px;
+}
+
+.timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.timeline li::before {
+  position: absolute;
+  top: 7px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  background: var(--line-strong);
+  content: "";
+}
+
+.timeline li[data-current="true"]::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.timeline-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--faint);
+  font: 700 0.66rem/1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.timeline-kicker b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.timeline h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.32rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.timeline p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.timeline li[data-pending="true"] h3,
+.timeline li[data-pending="true"] p {
+  color: var(--faint);
+}
+
+.about-timeline {
+  padding: 72px 0 96px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.about-timeline-head {
+  display: grid;
+  gap: 10px;
+  max-width: 56ch;
+  margin-bottom: 38px;
+}
+
+.about-timeline-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--title-card);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.about-timeline-head > p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.repo-empty p {
+  margin: 0;
+  color: var(--faint);
+  font: 700 0.72rem/1 var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   10. Stat Chip — 状态胶囊（BoardUI Chip / HeroUI Trend Chip）
+   ============================================================ */
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 7px;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font: 700 0.64rem/1 var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.stat-chip i {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+}
+
+.stat-chip[data-tone="quiet"] {
+  color: var(--faint);
+}
+
+.stat-chip[data-tone="quiet"] i {
+  background: var(--faint);
+}
+
+/* ============================================================
+   11. Thinking Orb — 点阵 orb（libraries.dev thinking-orbs）
+   ============================================================ */
+
+.thinking-orb {
+  display: block;
+  width: 88px;
+  height: 88px;
+  color: var(--accent);
+}
+
+.thinking-orb--sm {
+  width: 44px;
+  height: 44px;
+}
+
+.not-found .thinking-orb {
+  margin-bottom: 26px;
+}
+
+.repo-empty .thinking-orb {
+  margin: 0 auto 12px;
+}
+
+.repo-empty {
+  display: grid;
+  justify-items: center;
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* ============================================================
+   12. 全局动效降级
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .beam::before {
+    animation: none;
+    background: none;
+  }
+
+  .cmdk-panel,
+  .cmdk-scrim,
+  .cmdk-clear[data-show="true"] {
+    animation: none;
+  }
+
+  .toc-sheet {
+    transition: none;
+  }
+
+  .cmdk-highlight {
+    transition: opacity 120ms ease;
+  }
+}
+
+/* ============================================================
+   点阵波动背景 DOT FIELD
+   一整屏固定画布铺在最底层，正文与页脚靠 position 自然盖在上面。
+   不改动任何既有定位，也不参与布局。
+   ============================================================ */
+
+.dot-field {
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 1;
+  -webkit-mask-image: radial-gradient(ellipse 118% 96% at 50% 38%, #000 58%, rgba(0, 0, 0, 0.5) 100%);
+  mask-image: radial-gradient(ellipse 118% 96% at 50% 38%, #000 58%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* 长文页压暗，读正文时不抢视线 */
+.dot-field[data-tone="dim"] {
+  opacity: 0.42;
+}
+
+main,
+.site-footer {
+  position: relative;
+}

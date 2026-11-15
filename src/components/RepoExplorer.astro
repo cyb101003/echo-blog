@@ -1,6 +1,7 @@
 ---
 import github from "@/data/github.json";
 import { privateProjects } from "@/data/projects";
+import ThinkingOrb from "@/components/ThinkingOrb.astro";
 
 const labels: Record<string, string> = {
   private: "私有案例",
@@ -29,10 +30,18 @@ const counts = Object.fromEntries(kinds.map(kind => [kind, kind === "all" ? proj
   <div class="repo-toolbar">
     <div class="repo-filters" role="group" aria-label="筛选仓库类型">
       {kinds.map(kind => (
-        <button type="button" class:list={["filter-button", { active: kind === "all" }]} data-kind={kind} aria-pressed={kind === "all" ? "true" : "false"}>
+        <button type="button" class:list={["filter-button", { active: kind === "all" }]} data-kind={kind} data-magnetic aria-pressed={kind === "all" ? "true" : "false"}>
           {kind === "all" ? "全部" : labels[kind]} <span>{counts[kind]}</span>
         </button>
       ))}
+    </div>
+    <div class="slide-confirm" data-slide-confirm hidden>
+      <p>滑动重置</p>
+      <div class="slide-track" data-slide-track>
+        <div class="slide-fill" data-slide-fill></div>
+        <p class="slide-label">向右滑动清除筛选</p>
+        <button class="slide-handle" type="button" data-slide-handle aria-label="向右滑动以清除筛选">→</button>
+      </div>
     </div>
     <p class="sync-label">
       <span aria-hidden="true"></span>
@@ -66,7 +75,10 @@ const counts = Object.fromEntries(kinds.map(kind => [kind, kind === "all" ? proj
       </article>
     ))}
   </div>
-  <p class="repo-empty" data-repo-empty hidden>这个分类还没有项目。</p>
+  <div class="repo-empty" data-repo-empty hidden>
+    <ThinkingOrb size="sm" label="这个分类暂时没有项目" />
+    <p>这个分类还没有项目。</p>
+  </div>
 </section>
 
 <script>
@@ -77,6 +89,132 @@ const counts = Object.fromEntries(kinds.map(kind => [kind, kind === "all" ? proj
     const buttons = [...explorer.querySelectorAll("[data-kind]")];
     const rows = [...explorer.querySelectorAll("[data-repo-kind]")];
     const empty = explorer.querySelector("[data-repo-empty]");
+    const slide = explorer.querySelector<HTMLElement>("[data-slide-confirm]");
+    const track = explorer.querySelector<HTMLElement>("[data-slide-track]");
+    const handle = explorer.querySelector<HTMLButtonElement>("[data-slide-handle]");
+    const fill = explorer.querySelector<HTMLElement>("[data-slide-fill]");
+    const controller = new AbortController();
+    const { signal } = controller;
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
+
+    /* 磁吸：指针靠近按钮时轻微跟随（Bencho Magnetic Select 的手感） */
+    const magnetTargets = [...explorer.querySelectorAll<HTMLElement>("[data-magnetic]")];
+    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (canHover && !prefersReduced) {
+      const REACH = 54;
+      const STRENGTH = 0.3;
+      const LIMIT = 6;
+      explorer.addEventListener("pointermove", event => {
+        magnetTargets.forEach(button => {
+          const rect = button.getBoundingClientRect();
+          const dx = event.clientX - (rect.left + rect.width / 2);
+          const dy = event.clientY - (rect.top + rect.height / 2);
+          const distance = Math.hypot(dx, dy);
+          const range = Math.max(rect.width, rect.height) / 2 + REACH;
+          if (distance < range) {
+            const pull = (1 - distance / range) * STRENGTH;
+            button.style.setProperty("--mx", `${Math.max(-LIMIT, Math.min(LIMIT, dx * pull)).toFixed(2)}px`);
+            button.style.setProperty("--my", `${Math.max(-LIMIT, Math.min(LIMIT, dy * pull)).toFixed(2)}px`);
+            button.dataset.magnetized = "true";
+          } else if (button.dataset.magnetized === "true") {
+            button.style.setProperty("--mx", "0px");
+            button.style.setProperty("--my", "0px");
+            button.dataset.magnetized = "false";
+          }
+        });
+      }, { signal });
+    }
+
+    /* 滑动确认：非「全部」筛选时出现，滑到底清除筛选（Bencho Slide to Confirm） */
+    let offset = 0;
+    let base = 0;
+    let startX = 0;
+    let dragging = false;
+    let confirming = false;
+
+    const maxOffset = () => (track && handle ? Math.max(0, track.clientWidth - handle.offsetWidth - 6) : 0);
+
+    const paintSlide = (value: number, animate: boolean) => {
+      if (!track || !handle || !fill) return;
+      const easing = animate && !prefersReduced ? "260ms cubic-bezier(.22,1,.36,1)" : "0ms";
+      handle.style.transition = `transform ${easing}`;
+      fill.style.transition = `transform ${easing}`;
+      handle.style.transform = `translateX(${value}px)`;
+      fill.style.transform = `scaleX(${Math.min(1, (value + handle.offsetWidth) / Math.max(1, track.clientWidth))})`;
+    };
+
+    const resetSlide = (animate = true) => {
+      offset = 0;
+      base = 0;
+      track?.removeAttribute("data-done");
+      paintSlide(0, animate);
+    };
+
+    const confirmReset = () => {
+      if (!track) return;
+      confirming = true;
+      track.dataset.done = "true";
+      paintSlide(maxOffset(), true);
+      buttons.find(button => button.getAttribute("data-kind") === "all")?.dispatchEvent(new Event("click"));
+      window.setTimeout(() => {
+        confirming = false;
+        if (slide) slide.hidden = true;
+        resetSlide(false);
+      }, 460);
+    };
+
+    handle?.addEventListener("pointerdown", event => {
+      if (!track) return;
+      dragging = true;
+      base = offset;
+      startX = event.clientX;
+      handle.setPointerCapture(event.pointerId);
+      track.dataset.dragging = "true";
+    }, { signal });
+
+    handle?.addEventListener("pointermove", event => {
+      if (!dragging) return;
+      offset = Math.max(0, Math.min(maxOffset(), base + (event.clientX - startX)));
+      paintSlide(offset, false);
+    }, { signal });
+
+    handle?.addEventListener("pointerup", event => {
+      if (!dragging) return;
+      dragging = false;
+      handle.releasePointerCapture(event.pointerId);
+      track?.removeAttribute("data-dragging");
+      if (offset >= maxOffset() * 0.9) confirmReset();
+      else resetSlide(true);
+    }, { signal });
+
+    handle?.addEventListener("pointercancel", () => {
+      dragging = false;
+      resetSlide(true);
+    }, { signal });
+
+    handle?.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        confirmReset();
+      }
+    }, { signal });
+
+    const syncSlide = () => {
+      if (!slide || confirming) return;
+      const active = buttons.find(button => button.classList.contains("active"));
+      const kind = active?.getAttribute("data-kind") ?? "all";
+      const shouldShow = kind !== "all";
+      slide.hidden = !shouldShow;
+      if (!shouldShow) resetSlide(false);
+    };
+
+    syncSlide();
+    if ("ResizeObserver" in window && track) {
+      new ResizeObserver(() => {
+        if (!track.dataset.dragging) paintSlide(offset, false);
+      }).observe(track);
+    }
 
     buttons.forEach(button => button.addEventListener("click", async () => {
       if (!(button instanceof HTMLButtonElement) || explorer.dataset.filtering === "true") return;
@@ -92,6 +230,7 @@ const counts = Object.fromEntries(kinds.map(kind => [kind, kind === "all" ? proj
         item.classList.toggle("active", selected);
         item.setAttribute("aria-pressed", String(selected));
       });
+      syncSlide();
 
       const shouldShow = new Map(rows.map(row => [row, kind === "all" || row.getAttribute("data-repo-kind") === kind]));
       const leaving = rows.filter(row => !row.hasAttribute("hidden") && !shouldShow.get(row));

@@ -16,6 +16,11 @@ const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.st
     ))}
     <i class="nav-indicator" aria-hidden="true"></i>
   </nav>
+  <button class="nav-command" type="button" data-cmdk-trigger aria-label="打开命令面板，搜索文章、项目或跳转页面">
+    <span aria-hidden="true">/</span>
+    <span data-label>搜索</span>
+    <span class="kbd" aria-hidden="true">⌘K</span>
+  </button>
   <div class="header-foot">
     <p><span class="status-dot" aria-hidden="true"></span>OPEN TO LEARN</p>
     <p>LOCATION · TBD</p>

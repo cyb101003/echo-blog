@@ -1,0 +1,87 @@
+---
+/**
+ * 提交热力图 — 参考 BoardUI Contributions Card 的结构，
+ * 数据来自本仓库真实的 git 提交历史（构建时读取），
+ * 没有 git 环境时整块隐藏，不展示占位假数据。
+ */
+import { execSync } from "node:child_process";
+
+const WEEKS = 26;
+const CELLS = WEEKS * 7;
+
+const counts = new Map<string, number>();
+try {
+  const raw = execSync("git log --format=%ad --date=short", {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+    maxBuffer: 1024 * 1024 * 8
+  });
+  raw
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .forEach(day => counts.set(day, (counts.get(day) ?? 0) + 1));
+} catch {
+  // 无 git 仓库或 git 不可用时保持空表
+}
+
+const toKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const end = new Date(today);
+const start = new Date(today);
+start.setDate(start.getDate() - (CELLS - 1));
+// 对齐到周日，让每列是一周
+start.setDate(start.getDate() - start.getDay());
+
+const days: { key: string; count: number; level: number }[] = [];
+const cursor = new Date(start);
+while (cursor <= end) {
+  const key = toKey(cursor);
+  const count = counts.get(key) ?? 0;
+  days.push({
+    key,
+    count,
+    level: count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 9 ? 3 : 4
+  });
+  cursor.setDate(cursor.getDate() + 1);
+}
+
+const total = [...counts.values()].reduce((sum, value) => sum + value, 0);
+const activeDays = days.filter(day => day.count > 0).length;
+const available = total > 0;
+const rangeLabel = `${new Date(days[0]?.key ?? toKey(start)).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })} — ${today.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}`;
+---
+
+{available && (
+  <section class="contributions" aria-label="本仓库提交热力图">
+    <header class="contributions-head">
+      <p>COMMIT ACTIVITY / 近 {WEEKS} 周</p>
+      <strong>{total} 次提交 · {activeDays} 天有记录</strong>
+    </header>
+    <div class="contributions-grid" role="img" aria-label={`近 ${WEEKS} 周共 ${total} 次提交，${activeDays} 天有提交记录`}>
+      {days.map(day => (
+        <i data-level={String(day.level)} title={`${day.key} · ${day.count} 次提交`} aria-hidden="true" />
+      ))}
+    </div>
+    <footer class="contributions-foot">
+      <span>{rangeLabel}</span>
+      <span class="contributions-legend">
+        少
+        <i data-level="0" />
+        <i data-level="1" />
+        <i data-level="2" />
+        <i data-level="3" />
+        <i data-level="4" />
+        多
+      </span>
+    </footer>
+  </section>
+)}

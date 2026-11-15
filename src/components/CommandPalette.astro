@@ -1,0 +1,387 @@
+---
+import { getCollection } from "astro:content";
+import { NAV_ITEMS, SITE } from "@/config";
+import github from "@/data/github.json";
+import { privateProjects } from "@/data/projects";
+
+type Item = {
+  id: string;
+  group: string;
+  title: string;
+  hint: string;
+  href: string;
+  external?: boolean;
+  mark: string;
+};
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+
+const projectItems: Item[] = [
+  ...privateProjects.map(project => ({
+    id: `project-${project.id}`,
+    group: "项目",
+    title: project.name,
+    hint: project.facts.slice(0, 2).join(" · "),
+    href: project.url,
+    external: false,
+    mark: "◇"
+  })),
+  ...github.repositories.map(repo => ({
+    id: `repo-${repo.name}`,
+    group: "项目",
+    title: repo.name,
+    hint: [repo.language || "文档", `★ ${repo.stars}`].filter(Boolean).join(" · "),
+    href: repo.url,
+    external: true,
+    mark: "◇"
+  }))
+];
+
+const tagCounts = new Map<string, number>();
+posts.forEach(post => post.data.tags.forEach(tag => tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)));
+
+const groups: { title: string; items: Item[] }[] = [
+  {
+    title: "跳转",
+    items: NAV_ITEMS.map(item => ({
+      id: `nav-${item.index}`,
+      group: "跳转",
+      title: item.label,
+      hint: item.href,
+      href: item.href,
+      external: false,
+      mark: item.index
+    }))
+  },
+  {
+    title: "文章",
+    items: posts.map(post => ({
+      id: `post-${post.id}`,
+      group: "文章",
+      title: post.data.title,
+      hint: [post.data.tags[0] ?? "记录", post.data.publishedAt.toLocaleDateString("zh-CN")].join(" · "),
+      href: `/posts/${post.id}/`,
+      external: false,
+      mark: "¶"
+    }))
+  },
+  { title: "项目", items: projectItems },
+  {
+    title: "标签",
+    items: [...tagCounts.entries()].map(([tag, count]) => ({
+      id: `tag-${tag}`,
+      group: "标签",
+      title: `#${tag}`,
+      hint: `${count} 篇`,
+      href: `/tags/${encodeURIComponent(tag)}/`,
+      external: false,
+      mark: "#"
+    }))
+  },
+  {
+    title: "外部",
+    items: [
+      { id: "ext-github", group: "外部", title: "GitHub @cyb101003", hint: "github.com", href: SITE.github, external: true, mark: "↗" },
+      { id: "ext-zhihu", group: "外部", title: "知乎个人介绍", hint: "zhihu.com", href: SITE.zhihu, external: true, mark: "↗" },
+      { id: "ext-x", group: "外部", title: "X / Twitter", hint: "x.com", href: SITE.x, external: true, mark: "↗" },
+      { id: "ext-yt", group: "外部", title: "YouTube", hint: "youtube.com", href: SITE.youtube, external: true, mark: "↗" }
+    ] satisfies Item[]
+  }
+].filter(group => group.items.length > 0);
+
+const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+---
+
+<div class="cmdk" data-cmdk data-open="false">
+  <div class="cmdk-scrim" data-cmdk-scrim></div>
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="命令面板">
+    <div class="cmdk-search">
+      <span aria-hidden="true">/</span>
+      <input
+        class="cmdk-input"
+        data-cmdk-input
+        type="text"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="cmdk-list"
+        aria-autocomplete="list"
+        aria-activedescendant=""
+        placeholder="搜索文章、项目、标签，或跳转页面…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="cmdk-clear" data-cmdk-clear type="button" aria-label="清除搜索">×</button>
+      <span class="kbd">ESC</span>
+    </div>
+    <div class="cmdk-list" id="cmdk-list" role="listbox" aria-label="可执行条目" data-cmdk-list>
+      <div class="cmdk-highlight" data-cmdk-highlight aria-hidden="true"></div>
+      {groups.map(group => (
+        <div class="cmdk-group" data-cmdk-group>
+          <p class="cmdk-group-title">{group.title}</p>
+          {group.items.map(item => (
+            <a
+              class="cmdk-item"
+              id={`cmdk-${item.id}`}
+              role="option"
+              aria-selected="false"
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noreferrer" : undefined}
+              data-cmdk-item
+              data-search={[item.title, item.hint, item.group].join(" ").toLowerCase()}
+            >
+              <span class="cmdk-item-mark" aria-hidden="true">{item.mark}</span>
+              <span class="cmdk-item-body">
+                <span class="cmdk-item-title" data-cmdk-title>{item.title}</span>
+                <span class="cmdk-item-hint">{item.hint}</span>
+              </span>
+              {item.external ? <span class="kbd">↗</span> : <span />}
+            </a>
+          ))}
+        </div>
+      ))}
+      <p class="cmdk-empty" data-cmdk-empty hidden>没有匹配的条目，试试「文章」「标签」或仓库名。</p>
+    </div>
+    <footer class="cmdk-foot">
+      <span><b class="kbd">↑</b><b class="kbd">↓</b> 选择</span>
+      <span><b class="kbd">↵</b> 打开</span>
+      <span><b class="kbd">ESC</b> 清除 / 关闭</span>
+      <span data-cmdk-count>{total} 条</span>
+    </footer>
+  </div>
+</div>
+
+<script>
+  type CmdkRoot = HTMLElement & { __cmdkBound?: boolean };
+
+  function setupCommandPalette() {
+    const root = document.querySelector<CmdkRoot>("[data-cmdk]");
+    if (!root || root.__cmdkBound) return;
+    root.__cmdkBound = true;
+
+    const scrim = root.querySelector<HTMLElement>("[data-cmdk-scrim]");
+    const panel = root.querySelector<HTMLElement>(".cmdk-panel");
+    const input = root.querySelector<HTMLInputElement>("[data-cmdk-input]");
+    const list = root.querySelector<HTMLElement>("[data-cmdk-list]");
+    const highlight = root.querySelector<HTMLElement>("[data-cmdk-highlight]");
+    const clear = root.querySelector<HTMLButtonElement>("[data-cmdk-clear]");
+    const empty = root.querySelector<HTMLElement>("[data-cmdk-empty]");
+    const counter = root.querySelector<HTMLElement>("[data-cmdk-count]");
+    const items = [...root.querySelectorAll<HTMLAnchorElement>("[data-cmdk-item]")];
+    const groupNodes = [...root.querySelectorAll<HTMLElement>("[data-cmdk-group]")];
+    if (!input || !list || !highlight) return;
+
+    const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const runtime = window as Window & { __cmdkAbort?: AbortController };
+    runtime.__cmdkAbort?.abort();
+    const controller = new AbortController();
+    runtime.__cmdkAbort = controller;
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true, signal: controller.signal });
+    let visible: HTMLAnchorElement[] = [...items];
+    let activeIndex = 0;
+    let lastFocus: HTMLElement | null = null;
+
+    const isOpen = () => root.dataset.open === "true";
+
+    const moveHighlight = (item: HTMLAnchorElement | null, animate: boolean) => {
+      if (!item) {
+        highlight.dataset.visible = "false";
+        return;
+      }
+      // 用相对滚动容器的坐标计算，避免受分组元素 offsetParent 影响
+      const listRect = list.getBoundingClientRect();
+      const itemRect = item.getBoundingClientRect();
+      const top = itemRect.top - listRect.top + list.scrollTop;
+      const height = itemRect.height;
+      if (!animate || reduced()) highlight.style.transition = "opacity 120ms ease";
+      else highlight.style.transition = "";
+      highlight.style.transform = `translateY(${top}px)`;
+      highlight.style.height = `${height}px`;
+      highlight.dataset.visible = "true";
+    };
+
+    const setActive = (index: number, scroll = true) => {
+      if (!visible.length) {
+        activeIndex = -1;
+        items.forEach(item => item.setAttribute("aria-selected", "false"));
+        input.setAttribute("aria-activedescendant", "");
+        moveHighlight(null, false);
+        return;
+      }
+      activeIndex = (index + visible.length) % visible.length;
+      const next = visible[activeIndex];
+      visible.forEach(item => item.setAttribute("aria-selected", String(item === next)));
+      input.setAttribute("aria-activedescendant", next.id);
+      moveHighlight(next, true);
+      if (scroll) {
+        const listRect = list.getBoundingClientRect();
+        const rect = next.getBoundingClientRect();
+        const top = rect.top - listRect.top + list.scrollTop;
+        const bottom = top + rect.height;
+        if (top < list.scrollTop) list.scrollTo({ top: top - 8, behavior: reduced() ? "auto" : "smooth" });
+        else if (bottom > list.scrollTop + list.clientHeight) {
+          list.scrollTo({ top: bottom - list.clientHeight + 8, behavior: reduced() ? "auto" : "smooth" });
+        }
+      }
+    };
+
+    const highlightText = (element: HTMLElement, text: string, query: string) => {
+      if (!query) {
+        element.textContent = text;
+        return;
+      }
+      const index = text.toLowerCase().indexOf(query.toLowerCase());
+      if (index < 0) {
+        element.textContent = text;
+        return;
+      }
+      element.textContent = "";
+      element.append(document.createTextNode(text.slice(0, index)));
+      const mark = document.createElement("mark");
+      mark.textContent = text.slice(index, index + query.length);
+      element.append(mark, document.createTextNode(text.slice(index + query.length)));
+    };
+
+    const applyFilter = (rawQuery: string) => {
+      const query = rawQuery.trim().toLowerCase();
+      let shown = 0;
+      items.forEach(item => {
+        const titleNode = item.querySelector<HTMLElement>("[data-cmdk-title]");
+        const original = titleNode?.dataset.original ?? titleNode?.textContent ?? "";
+        if (titleNode && !titleNode.dataset.original) titleNode.dataset.original = original;
+        const match = !query || (item.dataset.search ?? "").includes(query);
+        item.hidden = !match;
+        if (match) shown += 1;
+        if (titleNode) highlightText(titleNode, original, query);
+      });
+
+      groupNodes.forEach(group => {
+        const hasVisible = [...group.querySelectorAll<HTMLElement>("[data-cmdk-item]")].some(item => !item.hidden);
+        group.hidden = !hasVisible;
+      });
+
+      visible = items.filter(item => !item.hidden);
+      if (empty) empty.hidden = shown !== 0;
+      if (counter) counter.textContent = query ? `${shown} / ${items.length} 条` : `${items.length} 条`;
+      if (clear) clear.dataset.show = String(rawQuery.length > 0);
+
+      setActive(0, false);
+      list.scrollTop = 0;
+    };
+
+    const open = () => {
+      if (isOpen()) return;
+      lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      root.dataset.open = "true";
+      root.removeAttribute("aria-hidden");
+      document.documentElement.style.overflow = "hidden";
+      input.value = "";
+      applyFilter("");
+      window.requestAnimationFrame(() => {
+        input.focus();
+        setActive(0, false);
+      });
+    };
+
+    const close = () => {
+      if (!isOpen()) return;
+      root.dataset.open = "false";
+      root.setAttribute("aria-hidden", "true");
+      document.documentElement.style.overflow = "";
+      if (lastFocus?.isConnected) lastFocus.focus();
+      lastFocus = null;
+    };
+
+    const toggle = () => (isOpen() ? close() : open());
+
+    input.addEventListener("input", () => applyFilter(input.value));
+    clear?.addEventListener("click", () => {
+      input.value = "";
+      applyFilter("");
+      input.focus();
+    });
+    scrim?.addEventListener("click", close);
+
+    items.forEach((item, index) => {
+      item.addEventListener("pointerenter", () => {
+        if (!isOpen()) return;
+        const visibleIndex = visible.indexOf(item);
+        if (visibleIndex >= 0) setActive(visibleIndex, false);
+        else setActive(index, false);
+      });
+      item.addEventListener("click", () => close());
+    });
+
+    list.addEventListener("scroll", () => {
+      list.dataset.scrolled = String(list.scrollTop > 2);
+    }, { passive: true });
+
+    document.addEventListener("keydown", event => {
+      const key = event.key.toLowerCase();
+      const command = event.metaKey || event.ctrlKey;
+      if (command && key === "k") {
+        event.preventDefault();
+        toggle();
+        return;
+      }
+      if (!isOpen()) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (input.value) {
+          input.value = "";
+          applyFilter("");
+        } else {
+          close();
+        }
+        return;
+      }
+      if (event.key === "ArrowDown" || (event.ctrlKey && key === "n")) {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+        return;
+      }
+      if (event.key === "ArrowUp" || (event.ctrlKey && key === "p")) {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+        return;
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        setActive(0);
+        return;
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        setActive(visible.length - 1);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const target = visible[activeIndex];
+        if (target) {
+          close();
+          if (target.target === "_blank") window.open(target.href, "_blank", "noreferrer");
+          else window.location.href = target.href;
+        }
+      }
+    }, { signal: controller.signal });
+
+    // 顶栏与页面内的触发按钮
+    document.querySelectorAll<HTMLElement>("[data-cmdk-trigger]").forEach(trigger => {
+      if (trigger.dataset.bound === "true") return;
+      trigger.dataset.bound = "true";
+      trigger.addEventListener("click", () => open(), { signal: controller.signal });
+    });
+
+    if (panel) {
+      panel.addEventListener("keydown", event => {
+        if (event.key === "Tab") event.preventDefault();
+      });
+    }
+  }
+
+  document.addEventListener("astro:page-load", setupCommandPalette);
+  setupCommandPalette();
+</script>

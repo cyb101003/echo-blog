@@ -1,0 +1,179 @@
+---
+/**
+ * 点阵波动背景 — 站点级动态底纹。
+ *
+ * 做法：一整屏固定画布，规则点阵被两道斜向行波推起涟漪，
+ * 波峰处点更大更亮、波谷处几乎消失。滚动时相位缓慢偏移，
+ * 底纹会跟着页面"流动"，避免看起来像贴在窗口上的静态贴纸。
+ *
+ * 约束：
+ * - 纯 canvas，零依赖，颜色直接读 --accent
+ * - 30fps 上限 + 页面隐藏时暂停 + reduced-motion 时只画一帧静态
+ * - 画布本身不改任何布局，只作为底层背景
+ */
+type Props = {
+  /** article 页把底纹压暗，长文阅读时更安静 */
+  tone?: "default" | "dim";
+};
+
+const { tone = "default" } = Astro.props;
+---
+
+<canvas class="dot-field" data-dot-field data-tone={tone} aria-hidden="true"></canvas>
+
+<script>
+  const TAU = Math.PI * 2;
+  /** 5 档明暗，按波峰强度分桶，减少每帧的绘制调用 */
+  const LEVELS = [
+    { alpha: 0.08, radius: 0.75 },
+    { alpha: 0.13, radius: 0.95 },
+    { alpha: 0.19, radius: 1.2 },
+    { alpha: 0.26, radius: 1.5 },
+    { alpha: 0.34, radius: 1.85 }
+  ];
+
+  let teardown: (() => void) | null = null;
+  let mounted: HTMLCanvasElement | null = null;
+
+  function accentRgb(): [number, number, number] {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#83e1b1";
+    const hex = raw.replace("#", "");
+    const full = hex.length === 3 ? [...hex].map(char => char + char).join("") : hex;
+    const value = Number.parseInt(full, 16);
+    if (!Number.isFinite(value)) return [131, 225, 177];
+    return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+  }
+
+  function boot() {
+    const found = document.querySelector("[data-dot-field]");
+    if (!(found instanceof HTMLCanvasElement)) {
+      teardown?.();
+      teardown = null;
+      mounted = null;
+      return;
+    }
+    if (found === mounted) return;
+
+    const canvas: HTMLCanvasElement = found;
+
+    teardown?.();
+    teardown = null;
+    mounted = canvas;
+
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) return;
+    const ctx: CanvasRenderingContext2D = context;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const [r, g, b] = accentRgb();
+
+    let width = 0;
+    let height = 0;
+    let gap = 22;
+    let cols = 0;
+    let rows = 0;
+    let frameId = 0;
+    let last = 0;
+    let phase = 0;
+
+    function resize() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      gap = width < 640 ? 16 : 24;
+      cols = Math.ceil(width / gap) + 1;
+      rows = Math.ceil(height / gap) + 1;
+      paint(reduce.matches ? 0.9 : performance.now() / 1000);
+    }
+
+    const buckets: number[][][] = [];
+
+    function paint(time: number) {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < LEVELS.length; i += 1) buckets[i] = [];
+
+      for (let row = 0; row < rows; row += 1) {
+        const y = row * gap + gap / 2;
+        for (let col = 0; col < cols; col += 1) {
+          const x = col * gap + gap / 2;
+          const waveA = Math.sin((x * 0.55 + y * 0.85) * 0.052 - time * 1.05 + phase);
+          const waveB = Math.sin((x * 0.8 - y * 0.45) * 0.043 + time * 0.75 + phase * 0.6);
+          const strength = (waveA * 0.62 + waveB * 0.38 + 1) / 2;
+          const slot = strength < 0.34 ? 0 : strength < 0.51 ? 1 : strength < 0.66 ? 2 : strength < 0.82 ? 3 : 4;
+          buckets[slot].push([x, y]);
+        }
+      }
+
+      for (let i = 0; i < LEVELS.length; i += 1) {
+        const points = buckets[i];
+        if (!points.length) continue;
+        const level = LEVELS[i];
+        ctx.fillStyle = `rgba(${r},${g},${b},${level.alpha})`;
+        ctx.beginPath();
+        for (const [x, y] of points) {
+          ctx.moveTo(x + level.radius, y);
+          ctx.arc(x, y, level.radius, 0, TAU);
+        }
+        ctx.fill();
+      }
+    }
+
+    function tick(now: number) {
+      frameId = window.requestAnimationFrame(tick);
+      if (document.hidden || now - last < 33) return;
+      last = now;
+      const target = window.scrollY * 0.0012;
+      phase += (target - phase) * 0.08;
+      paint(now / 1000);
+    }
+
+    function start() {
+      window.cancelAnimationFrame(frameId);
+      frameId = 0;
+      if (reduce.matches) {
+        paint(0.9);
+        return;
+      }
+      frameId = window.requestAnimationFrame(tick);
+    }
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        window.cancelAnimationFrame(frameId);
+        frameId = 0;
+      } else {
+        last = 0;
+        start();
+      }
+    };
+
+    let resizeTimer = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 140);
+    };
+
+    const onMotionChange = () => start();
+
+    window.addEventListener("resize", onResize, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
+    reduce.addEventListener("change", onMotionChange);
+
+    resize();
+    start();
+
+    teardown = () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+      reduce.removeEventListener("change", onMotionChange);
+    };
+  }
+
+  document.addEventListener("astro:page-load", boot);
+  if (document.readyState !== "loading") boot();
+</script>

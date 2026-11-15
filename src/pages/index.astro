@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PostCard from "@/components/PostCard.astro";
+import ContributionsGrid from "@/components/ContributionsGrid.astro";
 import github from "@/data/github.json";
 import { privateProjects } from "@/data/projects";
 import { SITE } from "@/config";
@@ -20,6 +21,8 @@ const projects = [
 ];
 const originals = github.repositories.filter(repo => repo.kind === "original").length + privateProjects.length;
 const forks = github.repositories.filter(repo => repo.kind === "fork").length;
+const originalShare = projects.length ? Math.round((originals / projects.length) * 100) : 0;
+const latestPost = posts[0]?.data.publishedAt;
 ---
 
 <BaseLayout immersive>
@@ -42,7 +45,7 @@ const forks = github.repositories.filter(repo => repo.kind === "fork").length;
       </ul>
     </div>
 
-    <aside class="profile-panel" aria-label={`${SITE.author}的个人头像`} data-entrance style="--entrance-delay: 180ms">
+    <aside class="profile-panel beam" aria-label={`${SITE.author}的个人头像`} data-entrance style="--entrance-delay: 180ms">
       <div class="profile-image-wrap">
         <img src="/assets/echo-avatar.jpg" width="430" height="440" alt={`${SITE.author}使用的猫咪头像，戴着黑框眼镜`} data-image-reveal />
       </div>
@@ -54,11 +57,36 @@ const forks = github.repositories.filter(repo => repo.kind === "fork").length;
   </section>
 
   <section class="home-stats" aria-label="公开数据">
-    <a href="/projects/" data-reveal style="--reveal-index: 0"><strong>{projects.length}</strong><span>项目展示</span><b class="motion-arrow">↗</b></a>
-    <a href="/projects/" data-reveal style="--reveal-index: 1"><strong>{originals}</strong><span>原创项目</span><b class="motion-arrow">↗</b></a>
-    <a href="/projects/" data-reveal style="--reveal-index: 2"><strong>{forks}</strong><span>Fork 项目</span><b class="motion-arrow">↗</b></a>
-    <a href="/posts/" data-reveal style="--reveal-index: 3"><strong>{posts.length}</strong><span>近期文章</span><b class="motion-arrow">↗</b></a>
+    <a href="/projects/" data-reveal style="--reveal-index: 0">
+      <strong>{projects.length}</strong>
+      <span>项目展示</span>
+      <em class="stat-chip"><i aria-hidden="true"></i>私有案例 {privateProjects.length}</em>
+      <b class="motion-arrow" aria-hidden="true">↗</b>
+    </a>
+    <a href="/projects/" data-reveal style="--reveal-index: 1">
+      <strong>{originals}</strong>
+      <span>原创项目</span>
+      <em class="stat-chip"><i aria-hidden="true"></i>占全部 {originalShare}%</em>
+      <b class="motion-arrow" aria-hidden="true">↗</b>
+    </a>
+    <a href={SITE.github} target="_blank" rel="noreferrer" data-reveal style="--reveal-index: 2">
+      <strong>{forks}</strong>
+      <span>Fork 项目</span>
+      <em class="stat-chip" data-tone="quiet"><i aria-hidden="true"></i>来自 @cyb101003</em>
+      <b class="motion-arrow" aria-hidden="true">↗</b>
+    </a>
+    <a href="/posts/" data-reveal style="--reveal-index: 3">
+      <strong>{posts.length}</strong>
+      <span>近期文章</span>
+      <em class="stat-chip" data-tone="quiet">
+        <i aria-hidden="true"></i>
+        {latestPost ? `最近 ${latestPost.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}` : "等待第一篇"}
+      </em>
+      <b class="motion-arrow" aria-hidden="true">↗</b>
+    </a>
   </section>
+
+  <ContributionsGrid />
 
   <section class="home-section" id="projects">
     <header class="home-section-head" data-reveal>
