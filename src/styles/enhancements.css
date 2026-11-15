@@ -1015,3 +1015,136 @@ main,
 .site-footer {
   position: relative;
 }
+
+/* ============================================================
+   13. Scroll Marquee — 滚动速度跑马灯
+   静止时缓慢左移，页面滚动时加速 + 轻微压扁。
+   数值由 src/scripts/motion.ts 的 setupScrollMarquee 驱动。
+   ============================================================ */
+
+.marquee-band {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 72%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-group {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 36px);
+  padding-right: clamp(20px, 3vw, 36px);
+}
+
+.marquee-item {
+  color: var(--text);
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 3.2vw, 2rem);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.marquee-item:nth-of-type(even) {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--line-strong);
+}
+
+.marquee-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(131, 225, 177, 0.55);
+  opacity: 0.85;
+}
+
+@media (max-width: 639px) {
+  .marquee-band {
+    padding: 18px 0;
+  }
+
+  .marquee-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* ============================================================
+   14. Odometer — 数字滚动
+   .home-stats .odo 用更高权重覆盖 .home-stats strong 的 display。
+   行高由 JS 实测后写进 style，避免用 em 猜字体导致半格裁切。
+   ============================================================ */
+
+.home-stats .odo {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.odo-fallback {
+  display: block;
+}
+
+.odo-col {
+  display: block;
+  overflow: hidden;
+}
+
+.odo-strip {
+  display: block;
+  transition: transform 1050ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* .home-stats b 原本是绝对定位的右上角箭头，必须显式还原 */
+.home-stats .odo .odo-strip > b {
+  position: static;
+  inset: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.12em;
+  min-width: 0.58em;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .odo-strip {
+    transition: none;
+  }
+}
+
+.home-stats .odo .odo-digits {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+/* .site-frame--immersive .home-stats span 给副标签定了 0.75rem 字号和
+   12px 上边距，权重与这里同级会按顺序覆盖，所以多加一层 .odo 拉开权重 */
+.home-stats .odo .odo-digits span {
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0;
+}

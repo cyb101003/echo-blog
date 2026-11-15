@@ -3,6 +3,8 @@ import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PostCard from "@/components/PostCard.astro";
 import ContributionsGrid from "@/components/ContributionsGrid.astro";
+import ScrollMarquee from "@/components/ScrollMarquee.astro";
+import Odometer from "@/components/Odometer.astro";
 import github from "@/data/github.json";
 import { privateProjects } from "@/data/projects";
 import { SITE } from "@/config";
@@ -58,25 +60,25 @@ const latestPost = posts[0]?.data.publishedAt;
 
   <section class="home-stats" aria-label="公开数据">
     <a href="/projects/" data-reveal style="--reveal-index: 0">
-      <strong>{projects.length}</strong>
+      <Odometer value={projects.length} />
       <span>项目展示</span>
       <em class="stat-chip"><i aria-hidden="true"></i>私有案例 {privateProjects.length}</em>
       <b class="motion-arrow" aria-hidden="true">↗</b>
     </a>
     <a href="/projects/" data-reveal style="--reveal-index: 1">
-      <strong>{originals}</strong>
+      <Odometer value={originals} />
       <span>原创项目</span>
       <em class="stat-chip"><i aria-hidden="true"></i>占全部 {originalShare}%</em>
       <b class="motion-arrow" aria-hidden="true">↗</b>
     </a>
     <a href={SITE.github} target="_blank" rel="noreferrer" data-reveal style="--reveal-index: 2">
-      <strong>{forks}</strong>
+      <Odometer value={forks} />
       <span>Fork 项目</span>
       <em class="stat-chip" data-tone="quiet"><i aria-hidden="true"></i>来自 @cyb101003</em>
       <b class="motion-arrow" aria-hidden="true">↗</b>
     </a>
     <a href="/posts/" data-reveal style="--reveal-index: 3">
-      <strong>{posts.length}</strong>
+      <Odometer value={posts.length} />
       <span>近期文章</span>
       <em class="stat-chip" data-tone="quiet">
         <i aria-hidden="true"></i>
@@ -85,6 +87,8 @@ const latestPost = posts[0]?.data.publishedAt;
       <b class="motion-arrow" aria-hidden="true">↗</b>
     </a>
   </section>
+
+  <ScrollMarquee />
 
   <ContributionsGrid />
 

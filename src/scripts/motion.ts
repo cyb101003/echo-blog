@@ -159,6 +159,184 @@ function setupReadingCards() {
   });
 }
 
+type MarqueeState = {
+  band: HTMLElement;
+  track: HTMLElement;
+  group: HTMLElement;
+  width: number;
+  pos: number;
+  skew: number;
+  velocity: number;
+  visible: boolean;
+};
+
+function setupScrollMarquee() {
+  const bands = [...document.querySelectorAll<HTMLElement>("[data-marquee]")]
+    .filter(band => band.dataset.marqueeReady !== "true");
+  if (!bands.length) return;
+  bands.forEach(band => {
+    band.dataset.marqueeReady = "true";
+  });
+
+  const states: MarqueeState[] = [];
+  bands.forEach(band => {
+    const track = band.querySelector<HTMLElement>("[data-marquee-track]");
+    const group = band.querySelector<HTMLElement>("[data-marquee-group]");
+    if (!track || !group) return;
+    // 补两份副本做无缝循环，副本对读屏隐藏，原文只读一次
+    for (let copy = 0; copy < 2; copy += 1) {
+      const clone = group.cloneNode(true) as HTMLElement;
+      clone.setAttribute("aria-hidden", "true");
+      track.appendChild(clone);
+    }
+    states.push({
+      band,
+      track,
+      group,
+      width: group.getBoundingClientRect().width,
+      pos: 0,
+      skew: 0,
+      velocity: 0,
+      visible: true
+    });
+  });
+  if (!states.length) return;
+
+  const measure = () => {
+    states.forEach(state => {
+      const width = state.group.getBoundingClientRect().width;
+      if (width > 0) state.width = width;
+    });
+  };
+  measure();
+  window.addEventListener("resize", measure, { passive: true });
+  document.fonts?.ready.then(measure).catch(() => {});
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const state = states.find(item => item.band === entry.target);
+        if (state) state.visible = entry.isIntersecting;
+      });
+    }, { rootMargin: "140px" });
+    states.forEach(state => observer.observe(state.band));
+  }
+
+  if (reducedMotion()) return;
+
+  let lastScroll = window.scrollY;
+  let lastTime = performance.now();
+
+  const loop = (now: number) => {
+    // 路由切走后清掉引用，避免旧循环一直跑
+    for (let index = states.length - 1; index >= 0; index -= 1) {
+      if (!states[index].band.isConnected) states.splice(index, 1);
+    }
+    if (!states.length) return;
+
+    const delta = Math.min(3, Math.max(0.2, (now - lastTime) / 16.667));
+    lastTime = now;
+    const scroll = window.scrollY;
+    const scrolled = scroll - lastScroll;
+    lastScroll = scroll;
+
+    states.forEach(state => {
+      if (!state.visible) return;
+      state.velocity += (scrolled - state.velocity) * 0.22;
+      const speed = (0.78 + Math.min(9, Math.abs(state.velocity) * 0.6)) * delta;
+      state.pos -= speed;
+      if (state.width > 0 && -state.pos >= state.width) state.pos += state.width;
+      const targetSkew = Math.max(-3.5, Math.min(3.5, state.velocity * 0.1));
+      state.skew += (targetSkew - state.skew) * 0.09;
+      state.track.style.transform =
+        `translate3d(${state.pos.toFixed(2)}px, 0, 0) skewX(${state.skew.toFixed(2)}deg)`;
+    });
+
+    window.requestAnimationFrame(loop);
+  };
+
+  window.requestAnimationFrame(loop);
+}
+
+function setupOdometers() {
+  const nodes = [...document.querySelectorAll<HTMLElement>("[data-odo]")]
+    .filter(node => node.dataset.odoReady !== "true");
+  if (!nodes.length) return;
+  nodes.forEach(node => {
+    node.dataset.odoReady = "true";
+  });
+
+  // 降级到服务端渲染好的静态数字
+  if (reducedMotion()) return;
+
+  const playable: HTMLElement[] = [];
+
+  nodes.forEach(node => {
+    const value = node.dataset.odo ?? "";
+    if (!/^\d+$/.test(value)) return;
+
+    node.querySelector(".odo-fallback")?.remove();
+    const digits = document.createElement("span");
+    digits.className = "odo-digits";
+    digits.setAttribute("aria-hidden", "true");
+    // 先挂进文档再量行高，否则 getBoundingClientRect 全是 0
+    node.appendChild(digits);
+
+    [...value].forEach(digit => {
+      const column = document.createElement("span");
+      column.className = "odo-col";
+      const strip = document.createElement("span");
+      strip.className = "odo-strip";
+      for (let n = 0; n <= 9; n += 1) {
+        const glyph = document.createElement("b");
+        glyph.textContent = String(n);
+        strip.appendChild(glyph);
+      }
+      column.appendChild(strip);
+      digits.appendChild(column);
+
+      // 实测单格高度，避免用 em 猜字体造成半格裁切
+      const step = strip.firstElementChild?.getBoundingClientRect().height ?? 0;
+      if (step > 0) {
+        column.style.height = `${step}px`;
+        column.dataset.step = String(step);
+      }
+      column.dataset.digit = digit;
+    });
+
+    playable.push(node);
+  });
+
+  if (!playable.length) return;
+
+  const play = (node: HTMLElement) => {
+    const columns = [...node.querySelectorAll<HTMLElement>(".odo-col")];
+    columns.forEach((column, index) => {
+      const step = Number(column.dataset.step ?? 0);
+      const digit = Number(column.dataset.digit ?? 0);
+      window.setTimeout(() => {
+        const strip = column.querySelector<HTMLElement>(".odo-strip");
+        if (strip) strip.style.transform = `translateY(-${digit * step}px)`;
+      }, 140 + index * 90);
+    });
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    playable.forEach(play);
+    return;
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      play(entry.target as HTMLElement);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.5 });
+
+  playable.forEach(node => observer.observe(node));
+}
+
 export function setupMotionSystem() {
   document.documentElement.classList.add("motion-enabled");
   setupPageTransitionFallback();
@@ -168,4 +346,6 @@ export function setupMotionSystem() {
   setupImageReveal();
   setupNavIndicator();
   setupReadingCards();
+  setupScrollMarquee();
+  setupOdometers();
 }

@@ -1,0 +1,21 @@
+---
+/**
+ * 滚动速度跑马灯
+ * 静止时缓慢左移，页面滚动时加速并被压扁，松手后回弹。
+ * 文字内容直接改下面的 items 数组即可，不需要动别的地方。
+ */
+const items = ["BUILD", "SHIP", "元创岛", "HORIZON STARTUP", "内蒙古", "SOLIDITY", "LEARN IN PUBLIC", "16 Y/O"];
+---
+
+<section class="marquee-band" aria-label="关键词" data-marquee>
+  <div class="marquee-track" data-marquee-track>
+    <div class="marquee-group" data-marquee-group>
+      {items.map(item => (
+        <Fragment>
+          <span class="marquee-item">{item}</span>
+          <i class="marquee-dot" aria-hidden="true"></i>
+        </Fragment>
+      ))}
+    </div>
+  </div>
+</section>
