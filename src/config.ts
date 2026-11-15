@@ -35,6 +35,7 @@ export const SITE = {
     "cyb101003"
   ],
   github: "https://github.com/cyb101003",
+  horizon: "https://horizon-s.cn",
   youtube: "https://www.youtube.com/@Echo-bb-1003",
   x: "https://x.com/Echo101003",
   zhihu: "https://www.zhihu.com/pin/2075244898685562899",
