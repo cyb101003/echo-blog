@@ -32,16 +32,16 @@ const latestPost = posts[0]?.data.publishedAt;
         {SITE.age} Y/O BUILDER · <span class="hero-name-decode" data-decode-name={SITE.displayName} aria-label={SITE.displayName}>{SITE.displayName}</span><span class="hero-name-native">（{SITE.realName}）</span>
       </p>
       <h1 id="home-title" data-entrance style="--entrance-delay: 120ms">把有趣的ideas落地</h1>
-      <p class="hero-intro" data-entrance style="--entrance-delay: 240ms">你好，我是 {SITE.author}，一名 {SITE.age} 岁的 builder，也是元创岛联合创始人、Horizon AI 产品经理。我在这里记录项目、产品判断、文章，以及还没有答案的实验。</p>
+      <p class="hero-intro" data-entrance style="--entrance-delay: 240ms">你好，我是 {SITE.author}，一名 {SITE.age} 岁的 builder，也是元创岛联合创始人、Horizon Startup 内蒙古负责人。我在这里记录项目、产品判断、文章，以及还没有答案的实验。</p>
       <div class="hero-actions" data-entrance style="--entrance-delay: 340ms">
         <a class="button-primary" href="/projects/">浏览项目 <span class="motion-arrow" aria-hidden="true">↗</span></a>
         <a class="button-quiet" href="/about/">认识我</a>
       </div>
       <ul class="hero-meta" aria-label="当前身份与个人介绍" data-entrance style="--entrance-delay: 430ms">
         {SITE.roles.map((role, index) => (
-          <li><span>{String(index + 1).padStart(2, "0")} / {role.eyebrow}</span><strong>{role.label}</strong></li>
+          <li><span>{String(index + 1).padStart(2, "0")} / {role.eyebrow}</span><strong>{role.shortLabel}</strong></li>
         ))}
-        <li class="hero-meta-link"><a href={SITE.zhihu} target="_blank" rel="noreferrer"><span>03 / PROFILE</span><strong>知乎介绍 ↗</strong></a></li>
+        <li class="hero-meta-link"><a href={SITE.zhihu} target="_blank" rel="noreferrer"><span>{String(SITE.roles.length + 1).padStart(2, "0")} / PROFILE</span><strong>知乎介绍 ↗</strong></a></li>
       </ul>
     </div>
 

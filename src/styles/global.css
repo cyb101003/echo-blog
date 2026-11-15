@@ -2717,9 +2717,17 @@ body:not(.is-immersive)::before {
 
 .hero-meta li {
   flex: 1;
+  min-width: 0;
   color: var(--muted);
   font: 650 0.75rem/1.35 var(--mono);
   letter-spacing: 0.04em;
+}
+
+/* 身份标签长短差别大（如「Horizon Startup 内蒙古负责人」），
+   允许在列内折行，避免撑破 flex 列、盖到右侧分隔线与下一列 */
+.hero-meta li strong {
+  display: block;
+  overflow-wrap: break-word;
 }
 
 .hero-meta li + li {
@@ -3079,6 +3087,20 @@ body:not(.is-immersive)::before {
   .site-frame--immersive .featured-repo:nth-child(n) {
     grid-template-columns: 54px minmax(190px, 0.95fr) minmax(0, 1.05fr) 72px;
     gap: 18px;
+  }
+
+  /* 身份栏在窄屏改为竖向排列：三个标签长短不一，并排会挤到折行、基线错位 */
+  .hero-meta {
+    display: grid;
+    gap: 12px;
+    max-width: 26rem;
+  }
+
+  .hero-meta li + li {
+    padding-left: 0;
+    padding-top: 12px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
   }
 }
 
