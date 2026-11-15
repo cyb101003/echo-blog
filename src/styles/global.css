@@ -1104,7 +1104,7 @@ main {
   opacity: 1;
 }
 
-.prose a {
+.prose a:not(.button-primary):not(.button-quiet) {
   color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
