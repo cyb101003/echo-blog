@@ -126,7 +126,6 @@ const structuredData = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
-    <script is:inline>document.documentElement.classList.add("motion-enabled");</script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <ClientRouter />
   </head>

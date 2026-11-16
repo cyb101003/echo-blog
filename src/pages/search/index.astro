@@ -5,12 +5,12 @@ import SectionTitle from "@/components/SectionTitle.astro";
 
 <BaseLayout title="搜索 — Echo" description="搜索 Echo（陈宇博）的文章和项目记录。" noindex={true} searchIndex={false}>
   <section class="page-section">
-    <SectionTitle index="05" eyebrow="LOCAL FULL-TEXT SEARCH" title="搜索本站" description="搜索索引在构建时生成，不需要把查询提交给第三方搜索服务。" />
+    <SectionTitle title="搜索本站" description="找一篇文章、一个项目，或记录里提到的某个想法。" />
     <div class="search-shell" data-reveal>
-      <p class="search-state" data-search-state role="status">正在载入本地搜索索引…</p>
       <div class="search-components">
         <pagefind-config excerpt-length="22"></pagefind-config>
         <pagefind-input placeholder="搜索文章、项目或技术主题…"></pagefind-input>
+        <p class="search-state" data-search-state role="status">正在载入搜索…</p>
         <pagefind-summary></pagefind-summary>
         <pagefind-results></pagefind-results>
       </div>
@@ -21,22 +21,26 @@ import SectionTitle from "@/components/SectionTitle.astro";
 
 <link rel="stylesheet" href="/pagefind/pagefind-component-ui.css" />
 <script is:inline>
-  function bootSearch() {
+  async function bootSearch() {
     var target = document.querySelector(".search-components");
     var state = document.querySelector("[data-search-state]");
     if (!target || target.dataset.ready === "true") return;
     target.dataset.ready = "true";
 
-    var script = document.createElement("script");
-    script.src = "/pagefind/pagefind-component-ui.js";
-    script.type = "module";
-    script.onload = function () {
-      if (state) state.textContent = "搜索索引已就绪。支持键盘上下选择结果。";
-    };
-    script.onerror = function () {
-      if (state) state.textContent = "开发预览中暂时没有搜索索引；运行 npm run build 后即可使用。";
-    };
-    document.head.appendChild(script);
+    try {
+      await import("/pagefind/pagefind-component-ui.js");
+      await customElements.whenDefined("pagefind-input");
+      if (!target.isConnected) return;
+      if (state) state.textContent = "支持搜索标题和正文，试试「Astro」或「项目」。";
+      var query = new URLSearchParams(window.location.search).get("q");
+      var input = target.querySelector("pagefind-input input");
+      if (query && input) {
+        input.value = query;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    } catch {
+      if (state) state.textContent = "搜索暂时无法加载，请稍后重试，或通过文章列表和标签浏览内容。";
+    }
   }
   document.addEventListener("astro:page-load", bootSearch);
   bootSearch();

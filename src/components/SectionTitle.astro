@@ -1,15 +1,39 @@
 ---
-type Props = { index: string; eyebrow: string; title: string; description?: string };
+type Props = { index?: string; eyebrow?: string; title: string; description?: string };
 const { index, eyebrow, title, description } = Astro.props;
 ---
 
-<header class="section-title" data-reveal>
-  <div>
-    <span>{index}</span>
-    <p class="kicker">{eyebrow}</p>
-  </div>
+<header class:list={["section-title", { "section-title--plain": !index && !eyebrow }]} data-reveal>
+  {(index || eyebrow) && <div>
+    {index && <span>{index}</span>}
+    {eyebrow && <p class="kicker">{eyebrow}</p>}
+  </div>}
   <div>
     <h1>{title}</h1>
     {description && <p class="section-description">{description}</p>}
   </div>
 </header>
+
+<style>
+  .section-title--plain {
+    display: block;
+  }
+
+  .section-title--plain > div {
+    display: block;
+  }
+
+  .section-title--plain h1 {
+    font-family: var(--sans);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.4;
+  }
+
+  @media (min-width: 960px) {
+    .section-title--plain {
+      margin-left: 152px;
+    }
+  }
+</style>

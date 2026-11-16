@@ -1,12 +1,30 @@
 {
-  "syncedAt": "2026-11-15T08:09:59.541Z",
+  "syncedAt": "2026-11-16T04:06:56.764Z",
   "profile": {
     "login": "cyb101003",
     "htmlUrl": "https://github.com/cyb101003",
-    "publicRepos": 6,
+    "publicRepos": 7,
     "followers": 3
   },
   "repositories": [
+    {
+      "id": 1458700826,
+      "name": "video-studio",
+      "url": "https://github.com/cyb101003/video-studio",
+      "description": "unified 7-provider AI video generation + full production pipeline (Kling / Seedance / MiniMax / Vidu / Runway / Veo / Luma)",
+      "language": "Python",
+      "topics": [],
+      "stars": 0,
+      "forks": 0,
+      "openIssues": 0,
+      "kind": "original",
+      "fork": false,
+      "archived": false,
+      "template": false,
+      "mirror": false,
+      "updatedAt": "2026-11-15T10:58:05Z",
+      "pushedAt": "2026-11-15T13:14:13Z"
+    },
     {
       "id": 1345100619,
       "name": "cyb101003",
@@ -41,7 +59,7 @@
       "template": false,
       "mirror": false,
       "updatedAt": "2026-09-16T05:28:09Z",
-      "pushedAt": "2026-11-15T07:54:11Z"
+      "pushedAt": "2026-11-15T08:10:16Z"
     },
     {
       "id": 1250260570,

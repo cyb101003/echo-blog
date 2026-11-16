@@ -2,128 +2,395 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PostCard from "@/components/PostCard.astro";
-import ContributionsGrid from "@/components/ContributionsGrid.astro";
-import ScrollMarquee from "@/components/ScrollMarquee.astro";
-import Odometer from "@/components/Odometer.astro";
 import github from "@/data/github.json";
 import { privateProjects } from "@/data/projects";
 import { SITE } from "@/config";
 
-const posts = (await getCollection("posts", ({ data }) => !data.draft))
-  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
-  .slice(0, 3);
+const allPosts = (await getCollection("posts", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+const posts = allPosts.slice(0, 3);
+const featuredNames = ["video-studio", "rednote-tools", "echo-blog"];
 const projects = [
   ...privateProjects,
-  ...github.repositories.map(repo => ({
-    ...repo,
-    label: repo.kind === "original" ? "原创" : "Fork",
-    action: "GitHub ↗",
-    external: true
-  }))
-];
-const originals = github.repositories.filter(repo => repo.kind === "original").length + privateProjects.length;
-const forks = github.repositories.filter(repo => repo.kind === "fork").length;
-const originalShare = projects.length ? Math.round((originals / projects.length) * 100) : 0;
-const latestPost = posts[0]?.data.publishedAt;
+  ...featuredNames.flatMap(name => {
+    const repo = github.repositories.find(repo => repo.name === name && repo.kind === "original");
+    return repo ? [{ ...repo, label: repo.language ?? "开源项目", action: "查看源码", external: true }] : [];
+  })
+].slice(0, 3);
 ---
 
 <BaseLayout immersive>
   <section class="home-hero" aria-labelledby="home-title">
     <div class="hero-copy">
-      <p class="kicker hero-identity" data-entrance style="--entrance-delay: 40ms">
-        {SITE.age} Y/O BUILDER · <span class="hero-name-decode" data-decode-name={SITE.displayName} aria-label={SITE.displayName}>{SITE.displayName}</span><span class="hero-name-native">（{SITE.realName}）</span>
-      </p>
-      <h1 id="home-title" data-entrance style="--entrance-delay: 120ms">把有趣的ideas落地</h1>
-      <p class="hero-intro" data-entrance style="--entrance-delay: 240ms">你好，我是 {SITE.author}，一名 {SITE.age} 岁的 builder，也是元创岛联合创始人、Horizon Startup 内蒙古负责人。我在这里记录项目、产品判断、文章，以及还没有答案的实验。</p>
-      <div class="hero-actions" data-entrance style="--entrance-delay: 340ms">
-        <a class="button-primary" href="/projects/">浏览项目 <span class="motion-arrow" aria-hidden="true">↗</span></a>
-        <a class="button-quiet" href="/about/">认识我</a>
+      <p class="kicker hero-identity" data-entrance>Echo（陈宇博） / {SITE.age} 岁的 builder</p>
+      <h1 id="home-title" data-entrance style="--entrance-delay: 80ms">把有趣的想法，<br /><span>变成真实的作品。</span></h1>
+      <p class="hero-intro" data-entrance style="--entrance-delay: 160ms">写代码，做产品，也记录一路上的思考。<br />这里有我的项目、技术笔记和成长记录。</p>
+      <div class="hero-actions" data-entrance style="--entrance-delay: 240ms">
+        <a class="button-primary" href="#notes">阅读文章 <span class="motion-arrow" aria-hidden="true">↓</span></a>
+        <a class="button-quiet" href="/projects/">浏览项目 <span class="motion-arrow" aria-hidden="true">↗</span></a>
       </div>
-      <ul class="hero-meta" aria-label="当前身份与个人介绍" data-entrance style="--entrance-delay: 430ms">
-        {SITE.roles.map((role, index) => (
-          <li><span>{String(index + 1).padStart(2, "0")} / {role.eyebrow}</span><strong>{role.shortLabel}</strong></li>
-        ))}
-        <li class="hero-meta-link"><a href={SITE.zhihu} target="_blank" rel="noreferrer"><span>{String(SITE.roles.length + 1).padStart(2, "0")} / PROFILE</span><strong>知乎介绍 ↗</strong></a></li>
+      <ul class="hero-roles" aria-label="当前身份" data-entrance style="--entrance-delay: 320ms">
+        {SITE.roles.map(role => <li>{role.label}</li>)}
       </ul>
     </div>
-
-    <aside class="profile-panel beam" aria-label={`${SITE.author}的个人头像`} data-entrance style="--entrance-delay: 180ms">
-      <div class="profile-image-wrap">
-        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt={`${SITE.author}使用的猫咪头像，戴着黑框眼镜`} data-image-reveal />
+    <a class="portrait-link" href="/about/" aria-label="认识 Echo（陈宇博）" data-entrance style="--entrance-delay: 160ms">
+      <div class="portrait-image">
+        <img src="/assets/echo-avatar.jpg" width="430" height="440" alt="Echo 的头像：戴着黑框眼镜的猫咪" fetchpriority="high" />
       </div>
-      <div class="profile-caption">
-        <p><span class="status-dot" aria-hidden="true"></span>正在学习，也正在构建</p>
-        <a href="/about/" aria-label={`查看关于${SITE.author}的更多信息`}>ABOUT / 2026 ↗</a>
-      </div>
-    </aside>
-  </section>
-
-  <section class="home-stats" aria-label="公开数据">
-    <a href="/projects/" data-reveal style="--reveal-index: 0">
-      <Odometer value={projects.length} />
-      <span>项目展示</span>
-      <em class="stat-chip"><i aria-hidden="true"></i>私有案例 {privateProjects.length}</em>
-      <b class="motion-arrow" aria-hidden="true">↗</b>
-    </a>
-    <a href="/projects/" data-reveal style="--reveal-index: 1">
-      <Odometer value={originals} />
-      <span>原创项目</span>
-      <em class="stat-chip"><i aria-hidden="true"></i>占全部 {originalShare}%</em>
-      <b class="motion-arrow" aria-hidden="true">↗</b>
-    </a>
-    <a href={SITE.github} target="_blank" rel="noreferrer" data-reveal style="--reveal-index: 2">
-      <Odometer value={forks} />
-      <span>Fork 项目</span>
-      <em class="stat-chip" data-tone="quiet"><i aria-hidden="true"></i>来自 @cyb101003</em>
-      <b class="motion-arrow" aria-hidden="true">↗</b>
-    </a>
-    <a href="/posts/" data-reveal style="--reveal-index: 3">
-      <Odometer value={posts.length} />
-      <span>近期文章</span>
-      <em class="stat-chip" data-tone="quiet">
-        <i aria-hidden="true"></i>
-        {latestPost ? `最近 ${latestPost.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}` : "等待第一篇"}
-      </em>
-      <b class="motion-arrow" aria-hidden="true">↗</b>
+      <span class="portrait-name">认识 Echo <span class="motion-arrow" aria-hidden="true">↗</span></span>
     </a>
   </section>
 
-  <ScrollMarquee />
+  <nav class="home-summary" aria-label="博客概览">
+    <a href="/posts/"><strong>{allPosts.length.toString().padStart(2, "0")}</strong><span>篇文章</span><i aria-hidden="true">↗</i></a>
+    <a href="/projects/"><strong>{github.repositories.length.toString().padStart(2, "0")}</strong><span>个公开仓库</span><i aria-hidden="true">↗</i></a>
+    <a href="/rss.xml"><strong>RSS</strong><span>订阅更新</span><i aria-hidden="true">↗</i></a>
+  </nav>
 
-  <ContributionsGrid />
-
-  <section class="home-section" id="projects">
-    <header class="home-section-head" data-reveal>
-      <div><span>01</span><p class="kicker">PUBLIC WORK</p></div>
-      <div><h2>项目展示</h2><p>公开仓库与私有项目案例都放在这里；展示成果，但不泄漏不该公开的源码。</p><a href="/projects/">查看项目档案 <span class="motion-arrow" aria-hidden="true">→</span></a></div>
+  <section class="journal-section" id="notes" aria-labelledby="notes-title">
+    <header class="journal-heading">
+      <h2 id="notes-title">最近在写</h2>
+      <a href="/posts/">全部文章 <span class="motion-arrow" aria-hidden="true">↗</span></a>
     </header>
-    <div class="featured-repos">
+    <div class="post-list">
+      {posts.map((post, index) => <PostCard post={post} index={index} headingLevel="h3" />)}
+    </div>
+  </section>
+
+  <section class="journal-section" id="projects" aria-labelledby="projects-title">
+    <header class="journal-heading">
+      <h2 id="projects-title">做过的项目</h2>
+      <a href="/projects/">全部项目 <span class="motion-arrow" aria-hidden="true">↗</span></a>
+    </header>
+    <div class="project-grid">
       {projects.map((project, index) => (
-        <a
-          class="featured-repo"
-          href={project.url}
-          target={project.external ? "_blank" : undefined}
-          rel={project.external ? "noreferrer" : undefined}
-          data-repo-index={String(index + 1).padStart(2, "0")}
-          data-reveal
-          style={`--reveal-index: ${index}`}
-        >
-          <span>{String(index + 1).padStart(2, "0")} / {project.label}</span>
+        <a class="project-card" href={project.url} target={project.external ? "_blank" : undefined} rel={project.external ? "noreferrer" : undefined}>
+          <span class="project-card-meta"><span>{String(index + 1).padStart(2, "0")} / {project.label}</span><span class="motion-arrow" aria-hidden="true">↗</span></span>
           <h3>{project.name}</h3>
           <p>{project.description}</p>
-          <b>{project.action} <i class="motion-arrow" aria-hidden="true">↗</i></b>
+          <span class="project-card-action">{project.action.replace(/\s*↗$/, "")}</span>
         </a>
       ))}
     </div>
   </section>
-
-  <section class="home-section" id="notes">
-    <header class="home-section-head" data-reveal>
-      <div><span>02</span><p class="kicker">LATEST NOTES</p></div>
-      <div><h2>最近在写</h2><p>项目背后的过程、判断和踩过的坑。</p><a href="/posts/">查看全部文章 <span class="motion-arrow" aria-hidden="true">→</span></a></div>
-    </header>
-    <div class="post-list">
-      {posts.map((post, index) => <PostCard post={post} index={index} />)}
-    </div>
-  </section>
 </BaseLayout>
+
+<style>
+  :global(.site-frame--immersive) .home-hero {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: clamp(40px, 7vw, 112px);
+    width: min(calc(100% - 64px), 1080px);
+    min-height: 640px;
+    padding: 154px 0 72px;
+    border-bottom: 0;
+  }
+  :global(.site-frame--immersive) .hero-copy h1 {
+    margin-top: 24px;
+    font-size: clamp(2.5rem, 4.2vw, 3.75rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.35;
+    white-space: normal;
+  }
+  :global(.site-frame--immersive) .hero-copy h1 span {
+    color: var(--accent);
+    white-space: normal;
+  }
+  :global(.site-frame--immersive) .hero-identity {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+  :global(.site-frame--immersive) .hero-intro {
+    margin-top: 22px;
+    font-size: 1.0625rem;
+    line-height: 1.9;
+  }
+  :global(.site-frame--immersive) .hero-actions {
+    margin-top: 28px;
+  }
+  :global(.site-frame--immersive) .hero-actions a {
+    min-width: 144px;
+    font-family: var(--sans);
+    font-size: 0.875rem;
+    letter-spacing: 0;
+  }
+  .hero-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 28px 0 0;
+    padding: 0;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    list-style: none;
+  }
+  .hero-roles li::before {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin: 0 8px 3px 0;
+    background: var(--accent);
+    content: "";
+  }
+  .portrait-link {
+    display: block;
+    text-decoration: none;
+  }
+  .portrait-image {
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+  }
+  .portrait-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 260ms ease;
+  }
+  .portrait-name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .home-summary,
+  .journal-section {
+    width: min(calc(100% - 64px), 1080px);
+    margin-inline: auto;
+  }
+  .home-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-block: 1px solid var(--line-strong);
+  }
+  .home-summary a {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-height: 76px;
+    padding: 24px 0;
+    text-decoration: none;
+  }
+  .home-summary a + a {
+    padding-left: 28px;
+    border-left: 1px solid var(--line);
+  }
+  .home-summary strong {
+    font: 500 1.375rem/1.2 var(--mono);
+    letter-spacing: -0.05em;
+  }
+  .home-summary span {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .home-summary i {
+    margin-left: auto;
+    padding-right: 24px;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-style: normal;
+  }
+  .journal-section {
+    padding: 72px 0;
+    scroll-margin-top: 104px;
+  }
+  .journal-section + .journal-section {
+    padding-top: 0;
+  }
+  .journal-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 30px;
+  }
+  .journal-heading h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.4;
+  }
+  .journal-heading > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    color: var(--muted);
+    font-size: 0.875rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 26px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    text-decoration: none;
+    transition: transform 220ms ease, border-color 220ms ease;
+  }
+  .project-card-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--muted);
+    font: 500 0.75rem/1.5 var(--mono);
+  }
+  .project-card h3 {
+    margin: 28px 0 12px;
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .project-card p {
+    margin: 0 0 28px;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.8;
+  }
+  .project-card-action {
+    margin-top: auto;
+    color: var(--accent);
+    font-size: 0.8125rem;
+  }
+  @media (hover: hover) {
+    .project-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .portrait-link:hover img {
+      transform: scale(1.025);
+    }
+    .journal-heading > a:hover,
+    .home-summary a:hover,
+    .portrait-link:hover .portrait-name {
+      color: var(--accent);
+    }
+  }
+  @media (max-width: 900px) {
+    :global(.site-frame--immersive) .home-hero {
+      grid-template-columns: minmax(0, 1fr) 200px;
+      gap: 32px;
+      min-height: 580px;
+      padding-top: 136px;
+    }
+    .project-grid {
+      grid-template-columns: 1fr;
+    }
+    .project-card {
+      padding: 24px;
+    }
+    .project-card h3 {
+      margin-top: 16px;
+    }
+    .project-card p {
+      max-width: 60ch;
+      margin-bottom: 20px;
+    }
+  }
+  @media (max-width: 639px) {
+    :global(.site-frame--immersive) .home-hero {
+      position: relative;
+      display: block;
+      width: calc(100% - 40px);
+      min-height: 0;
+      padding: 112px 0 40px;
+    }
+    :global(.site-frame--immersive) .hero-copy {
+      padding-top: 84px;
+    }
+    :global(.site-frame--immersive) .hero-copy h1 {
+      margin-top: 18px;
+      font-size: clamp(1.8rem, 7.8vw, 2.6rem);
+      line-height: 1.4;
+    }
+    :global(.site-frame--immersive) .hero-identity {
+      font-size: 0.75rem;
+    }
+    :global(.site-frame--immersive) .hero-intro {
+      margin-top: 18px;
+      font-size: 1rem;
+    }
+    :global(.site-frame--immersive) .hero-actions {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 24px;
+    }
+    :global(.site-frame--immersive) .hero-actions a {
+      min-width: 0;
+    }
+    .hero-roles {
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .hero-roles li {
+      width: 100%;
+    }
+    .portrait-link {
+      position: absolute;
+      top: 94px;
+      left: 0;
+      width: 64px;
+    }
+    .portrait-image {
+      border-radius: 50%;
+    }
+    .portrait-name {
+      display: none;
+    }
+    .home-summary,
+    .journal-section {
+      width: calc(100% - 40px);
+    }
+    .home-summary a {
+      flex-direction: column;
+      gap: 6px;
+      padding: 18px 0;
+    }
+    .home-summary a + a {
+      padding-left: 16px;
+    }
+    .home-summary strong {
+      font-size: 1.125rem;
+    }
+    .home-summary span {
+      font-size: 0.75rem;
+    }
+    .home-summary i {
+      display: none;
+    }
+    .journal-section {
+      padding: 44px 0;
+      scroll-margin-top: 88px;
+    }
+    .journal-heading {
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .journal-heading h2 {
+      font-size: 1.625rem;
+    }
+    .journal-heading > a {
+      gap: 8px;
+      font-size: 0.8125rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-card,
+    .portrait-image img {
+      transition: none;
+    }
+  }
+</style>

@@ -1,8 +1,8 @@
 ---
 import type { CollectionEntry } from "astro:content";
 
-type Props = { post: CollectionEntry<"posts">; index?: number };
-const { post, index = 0 } = Astro.props;
+type Props = { post: CollectionEntry<"posts">; index?: number; headingLevel?: "h2" | "h3" };
+const { post, index = 0, headingLevel: Heading = "h2" } = Astro.props;
 const date = post.data.publishedAt.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
 ---
 
@@ -11,7 +11,7 @@ const date = post.data.publishedAt.toLocaleDateString("zh-CN", { year: "numeric"
     <p class="post-index">{String(index + 1).padStart(2, "0")}</p>
     <div class="post-copy">
       <div class="post-meta"><time datetime={post.data.publishedAt.toISOString()}>{date}</time><span>{post.data.tags[0] ?? "记录"}</span></div>
-      <h2>{post.data.title}</h2>
+      <Heading class="post-title">{post.data.title}</Heading>
       {post.data.description && <p>{post.data.description}</p>}
       <span class="post-read-progress" data-reading-track hidden aria-hidden="true">
         <span><i data-reading-value></i></span>

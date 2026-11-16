@@ -54,32 +54,6 @@ function setupNameDecode() {
   draw();
 }
 
-function setupScrollReveal() {
-  const targets = [...document.querySelectorAll<HTMLElement>("[data-reveal]")]
-    .filter(item => item.dataset.revealReady !== "true");
-  if (!targets.length) return;
-
-  if (reducedMotion() || !("IntersectionObserver" in window)) {
-    targets.forEach(item => item.classList.add("is-visible"));
-    return;
-  }
-
-  targets.forEach(item => {
-    item.dataset.revealReady = "true";
-    item.classList.add("reveal-ready");
-  });
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add("is-visible");
-      observer.unobserve(entry.target);
-    });
-  }, { threshold: 0.12, rootMargin: "0px 0px -4%" });
-
-  targets.forEach(item => observer.observe(item));
-}
-
 function setupImageReveal() {
   const images = [...document.querySelectorAll<HTMLImageElement>("[data-image-reveal], .prose img, .about-portrait img")];
   images.forEach(image => {
@@ -342,7 +316,6 @@ export function setupMotionSystem() {
   setupPageTransitionFallback();
   setupHeroEntrance();
   setupNameDecode();
-  setupScrollReveal();
   setupImageReveal();
   setupNavIndicator();
   setupReadingCards();

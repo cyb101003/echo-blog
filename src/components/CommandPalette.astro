@@ -11,7 +11,6 @@ type Item = {
   hint: string;
   href: string;
   external?: boolean;
-  mark: string;
 };
 
 const posts = (await getCollection("posts", ({ data }) => !data.draft))
@@ -24,8 +23,7 @@ const projectItems: Item[] = [
     title: project.name,
     hint: project.facts.slice(0, 2).join(" · "),
     href: project.url,
-    external: false,
-    mark: "◇"
+    external: false
   })),
   ...github.repositories.map(repo => ({
     id: `repo-${repo.name}`,
@@ -33,8 +31,7 @@ const projectItems: Item[] = [
     title: repo.name,
     hint: [repo.language || "文档", `★ ${repo.stars}`].filter(Boolean).join(" · "),
     href: repo.url,
-    external: true,
-    mark: "◇"
+    external: true
   }))
 ];
 
@@ -43,18 +40,6 @@ posts.forEach(post => post.data.tags.forEach(tag => tagCounts.set(tag, (tagCount
 
 const groups: { title: string; items: Item[] }[] = [
   {
-    title: "跳转",
-    items: NAV_ITEMS.map(item => ({
-      id: `nav-${item.index}`,
-      group: "跳转",
-      title: item.label,
-      hint: item.href,
-      href: item.href,
-      external: false,
-      mark: item.index
-    }))
-  },
-  {
     title: "文章",
     items: posts.map(post => ({
       id: `post-${post.id}`,
@@ -62,8 +47,18 @@ const groups: { title: string; items: Item[] }[] = [
       title: post.data.title,
       hint: [post.data.tags[0] ?? "记录", post.data.publishedAt.toLocaleDateString("zh-CN")].join(" · "),
       href: `/posts/${post.id}/`,
-      external: false,
-      mark: "¶"
+      external: false
+    }))
+  },
+  {
+    title: "跳转",
+    items: NAV_ITEMS.map(item => ({
+      id: `nav-${item.index}`,
+      group: "跳转",
+      title: item.label,
+      hint: item.href,
+      href: item.href,
+      external: false
     }))
   },
   { title: "项目", items: projectItems },
@@ -75,30 +70,36 @@ const groups: { title: string; items: Item[] }[] = [
       title: `#${tag}`,
       hint: `${count} 篇`,
       href: `/tags/${encodeURIComponent(tag)}/`,
-      external: false,
-      mark: "#"
+      external: false
     }))
   },
   {
     title: "外部",
     items: [
-      { id: "ext-horizon", group: "外部", title: "Horizon Startup 官网", hint: "horizon-s.cn", href: SITE.horizon, external: true, mark: "↗" },
-      { id: "ext-github", group: "外部", title: "GitHub @cyb101003", hint: "github.com", href: SITE.github, external: true, mark: "↗" },
-      { id: "ext-zhihu", group: "外部", title: "知乎个人介绍", hint: "zhihu.com", href: SITE.zhihu, external: true, mark: "↗" },
-      { id: "ext-x", group: "外部", title: "X / Twitter", hint: "x.com", href: SITE.x, external: true, mark: "↗" },
-      { id: "ext-yt", group: "外部", title: "YouTube", hint: "youtube.com", href: SITE.youtube, external: true, mark: "↗" }
+      { id: "ext-horizon", group: "外部", title: "Horizon Startup 官网", hint: "horizon-s.cn", href: SITE.horizon, external: true },
+      { id: "ext-github", group: "外部", title: "GitHub @cyb101003", hint: "github.com", href: SITE.github, external: true },
+      { id: "ext-zhihu", group: "外部", title: "知乎个人介绍", hint: "zhihu.com", href: SITE.zhihu, external: true },
+      { id: "ext-x", group: "外部", title: "X / Twitter", hint: "x.com", href: SITE.x, external: true },
+      { id: "ext-yt", group: "外部", title: "YouTube", hint: "youtube.com", href: SITE.youtube, external: true }
     ] satisfies Item[]
   }
 ].filter(group => group.items.length > 0);
 
 const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+const groupIcons: Record<string, string> = {
+  跳转: "M4 12h16m-6-6 6 6-6 6",
+  文章: "M14 3H5v18h14V8l-5-5Zm0 0v5h5M8 12h8m-8 4h6",
+  项目: "M3 7V5h7l2 2h9v13H3V7Z",
+  标签: "M10 3 8 21m8-18-2 18M4 8h17M3 16h17",
+  外部: "M7 17 17 7M7 7h10v10"
+};
 ---
 
 <div class="cmdk" data-cmdk data-open="false">
   <div class="cmdk-scrim" data-cmdk-scrim></div>
-  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="命令面板">
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="搜索本站">
     <div class="cmdk-search">
-      <span aria-hidden="true">/</span>
+      <svg class="cmdk-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 5 5" /></svg>
       <input
         class="cmdk-input"
         data-cmdk-input
@@ -108,17 +109,21 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
         aria-controls="cmdk-list"
         aria-autocomplete="list"
         aria-activedescendant=""
-        placeholder="搜索文章、项目、标签，或跳转页面…"
+        aria-label="搜索文章、项目或标签"
+        placeholder="搜索文章、项目或标签…"
         autocomplete="off"
         spellcheck="false"
       />
-      <button class="cmdk-clear" data-cmdk-clear type="button" aria-label="清除搜索">×</button>
-      <span class="kbd">ESC</span>
+      <button class="cmdk-clear" data-cmdk-clear type="button" aria-label="清除搜索" hidden>清除</button>
+      <button class="cmdk-close" data-cmdk-close type="button" aria-label="关闭搜索">
+        <kbd class="kbd" aria-hidden="true">Esc</kbd>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+      </button>
     </div>
     <div class="cmdk-list" id="cmdk-list" role="listbox" aria-label="可执行条目" data-cmdk-list>
       <div class="cmdk-highlight" data-cmdk-highlight aria-hidden="true"></div>
       {groups.map(group => (
-        <div class="cmdk-group" data-cmdk-group>
+        <div class="cmdk-group" role="group" aria-label={group.title} data-cmdk-group>
           <p class="cmdk-group-title">{group.title}</p>
           {group.items.map(item => (
             <a
@@ -132,23 +137,23 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
               data-cmdk-item
               data-search={[item.title, item.hint, item.group].join(" ").toLowerCase()}
             >
-              <span class="cmdk-item-mark" aria-hidden="true">{item.mark}</span>
+              <svg class="cmdk-item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={groupIcons[group.title]} /></svg>
               <span class="cmdk-item-body">
                 <span class="cmdk-item-title" data-cmdk-title>{item.title}</span>
                 <span class="cmdk-item-hint">{item.hint}</span>
               </span>
-              {item.external ? <span class="kbd">↗</span> : <span />}
+              {item.external ? <span class="cmdk-item-external" aria-label="在新窗口打开">↗</span> : <span />}
             </a>
           ))}
         </div>
       ))}
-      <p class="cmdk-empty" data-cmdk-empty hidden>没有匹配的条目，试试「文章」「标签」或仓库名。</p>
+      <p class="cmdk-empty" data-cmdk-empty hidden>没有找到匹配项<span>换个关键词，或在下方搜索全文。</span></p>
     </div>
     <footer class="cmdk-foot">
-      <span><b class="kbd">↑</b><b class="kbd">↓</b> 选择</span>
-      <span><b class="kbd">↵</b> 打开</span>
-      <span><b class="kbd">ESC</b> 清除 / 关闭</span>
-      <span data-cmdk-count>{total} 条</span>
+      <span class="cmdk-keyboard-hint"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> 选择</span>
+      <span class="cmdk-keyboard-hint"><kbd class="kbd">↵</kbd> 打开</span>
+      <span class="cmdk-count" data-cmdk-count role="status">{total} 条</span>
+      <a class="cmdk-fulltext" href="/search/" data-cmdk-fulltext>搜索全文 <span aria-hidden="true">→</span></a>
     </footer>
   </div>
 </div>
@@ -167,6 +172,8 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
     const list = root.querySelector<HTMLElement>("[data-cmdk-list]");
     const highlight = root.querySelector<HTMLElement>("[data-cmdk-highlight]");
     const clear = root.querySelector<HTMLButtonElement>("[data-cmdk-clear]");
+    const closeButton = root.querySelector<HTMLButtonElement>("[data-cmdk-close]");
+    const fulltext = root.querySelector<HTMLAnchorElement>("[data-cmdk-fulltext]");
     const empty = root.querySelector<HTMLElement>("[data-cmdk-empty]");
     const counter = root.querySelector<HTMLElement>("[data-cmdk-count]");
     const items = [...root.querySelectorAll<HTMLAnchorElement>("[data-cmdk-item]")];
@@ -265,7 +272,11 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
       visible = items.filter(item => !item.hidden);
       if (empty) empty.hidden = shown !== 0;
       if (counter) counter.textContent = query ? `${shown} / ${items.length} 条` : `${items.length} 条`;
-      if (clear) clear.dataset.show = String(rawQuery.length > 0);
+      if (fulltext) fulltext.href = query ? `/search/?q=${encodeURIComponent(rawQuery.trim())}` : "/search/";
+      if (clear) {
+        clear.dataset.show = String(rawQuery.length > 0);
+        clear.hidden = rawQuery.length === 0;
+      }
 
       setActive(0, false);
       list.scrollTop = 0;
@@ -303,6 +314,8 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
       input.focus();
     });
     scrim?.addEventListener("click", close);
+    closeButton?.addEventListener("click", close);
+    fulltext?.addEventListener("click", close);
 
     items.forEach((item, index) => {
       item.addEventListener("pointerenter", () => {
@@ -313,10 +326,6 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
       });
       item.addEventListener("click", () => close());
     });
-
-    list.addEventListener("scroll", () => {
-      list.dataset.scrolled = String(list.scrollTop > 2);
-    }, { passive: true });
 
     document.addEventListener("keydown", event => {
       const key = event.key.toLowerCase();
@@ -358,7 +367,7 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
         setActive(visible.length - 1);
         return;
       }
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && event.target === input) {
         event.preventDefault();
         const target = visible[activeIndex];
         if (target) {
@@ -378,7 +387,18 @@ const total = groups.reduce((sum, group) => sum + group.items.length, 0);
 
     if (panel) {
       panel.addEventListener("keydown", event => {
-        if (event.key === "Tab") event.preventDefault();
+        if (event.key !== "Tab") return;
+        const controls = [...panel.querySelectorAll<HTMLElement>("a[href], button, input, [tabindex]")]
+          .filter(element => element.tabIndex >= 0 && element.getClientRects().length > 0);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
       });
     }
   }

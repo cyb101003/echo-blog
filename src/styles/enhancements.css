@@ -1,7 +1,7 @@
 /**
  * 组件增强层
  *
- * 视觉规则与 global.css 一致：深色、无大面积渐变、--radius: 0、
+ * 视觉规则与 global.css 一致：深色、无大面积渐变、
  * 1px 描边、等宽字体小标签、强调色 --accent。
  * 这些交互形态移植自 BoardUI / Bencho / HeroUI Pro / libraries.dev，
  * 但按本站的 token 重写，不引入 React、Tailwind 或运行时依赖。
@@ -30,9 +30,8 @@
 }
 
 /* ============================================================
-   2. Command Palette — ⌘K（BoardUI Command Palette）
-   规格：12vh 处下落 10px + 4px 模糊收清，200ms；
-   40px 搜索行 + 32px 行高；滑行高亮；行内 @starting-style 上浮。
+   2. Command Palette — 参考 shadcn/ui Command 的输入、分组与快捷键布局
+   https://ui.shadcn.com/docs/components/command
    ============================================================ */
 
 .cmdk {
@@ -55,12 +54,17 @@
 
 .cmdk-panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(calc(100% - 28px), 640px);
-  margin: 12vh auto 0;
+  max-height: calc(100dvh - 48px);
+  margin: clamp(24px, 10dvh, 100px) auto 0;
+  overflow: hidden;
   border: 1px solid var(--line-strong);
+  border-radius: 12px;
   background: var(--panel);
-  box-shadow: 0 40px 90px -50px #000;
-  animation: cmdk-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.4);
+  animation: cmdk-enter 160ms ease-out both;
 }
 
 @keyframes cmdk-fade {
@@ -71,39 +75,39 @@
 @keyframes cmdk-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
-    filter: blur(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
 .cmdk-search {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 56px;
-  padding: 0 14px;
+  flex-shrink: 0;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 12px 0 20px;
   border-bottom: 1px solid var(--line);
 }
 
-.cmdk-search > span[aria-hidden] {
-  color: var(--accent);
-  font: 700 0.9rem/1 var(--mono);
+.cmdk-search-icon {
+  flex-shrink: 0;
+  color: var(--muted);
 }
 
 .cmdk-input {
   flex: 1;
   min-width: 0;
-  height: 54px;
+  height: 62px;
+  padding: 0;
   border: 0;
   background: transparent;
   color: var(--text);
   font-family: var(--sans);
-  font-size: 0.95rem;
+  font-size: 1rem;
   outline: none;
 }
 
@@ -113,12 +117,15 @@
 
 .cmdk-clear {
   display: none;
-  min-width: 32px;
-  height: 32px;
-  border: 1px solid var(--line);
-  background: var(--panel-raised);
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--muted);
-  font: 700 0.8rem/1 var(--mono);
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -126,45 +133,59 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: cmdk-pop 140ms ease both;
 }
 
-@keyframes cmdk-pop {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+.cmdk-close {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cmdk-close svg {
+  display: none;
+}
+
+.cmdk-clear:hover,
+.cmdk-close:hover {
+  color: var(--text);
+  background: rgb(255 255 255 / 0.05);
+}
+
+.cmdk .kbd,
+.nav-command .kbd {
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .cmdk-list {
   position: relative;
-  max-height: min(54vh, 400px);
-  padding: 6px;
+  min-height: 0;
+  max-height: min(55dvh, 460px);
+  padding: 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  transition: height 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.cmdk-list::before {
-  position: sticky;
-  z-index: 2;
-  top: 0;
-  display: block;
-  height: 0;
-  content: "";
-}
-
-.cmdk-list[data-scrolled="true"] {
-  mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 100%);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  scroll-padding: 8px;
 }
 
 .cmdk-highlight {
   position: absolute;
   z-index: 0;
   top: 0;
-  right: 6px;
-  left: 6px;
-  height: 36px;
-  border-left: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  right: 8px;
+  left: 8px;
+  height: 56px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.06);
   pointer-events: none;
   opacity: 0;
   transition:
@@ -183,63 +204,51 @@
 }
 
 .cmdk-group-title {
-  padding: 12px 10px 6px;
-  color: var(--faint);
-  font: 700 0.64rem/1 var(--mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  margin: 0;
+  padding: 16px 12px 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .cmdk-item {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  padding: 0 10px;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: 6px;
   color: var(--muted);
   text-decoration: none;
   cursor: pointer;
-}
-
-@starting-style {
-  .cmdk-item {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
-
-.cmdk-item {
-  opacity: 1;
-  transform: none;
-  transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
+  transition: color 120ms ease;
 }
 
 .cmdk-item[aria-selected="true"] {
   color: var(--text);
 }
 
-.cmdk-item-mark {
+.cmdk-item-icon,
+.cmdk-item-external {
   color: var(--faint);
-  font: 700 0.7rem/1 var(--mono);
-  text-align: center;
 }
 
-.cmdk-item[aria-selected="true"] .cmdk-item-mark {
-  color: var(--accent);
+.cmdk-item:focus-visible {
+  outline-offset: -3px;
 }
 
 .cmdk-item-body {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
-  padding: 7px 0;
 }
 
 .cmdk-item-title {
   overflow: hidden;
-  font-size: 0.875rem;
-  line-height: 1.25;
+  font-size: 0.9375rem;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -247,7 +256,8 @@
 .cmdk-item-hint {
   overflow: hidden;
   color: var(--faint);
-  font: 500 0.7rem/1.2 var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -259,26 +269,54 @@
 }
 
 .cmdk-empty {
-  padding: 26px 14px 30px;
-  color: var(--faint);
-  font: 500 0.8rem/1.5 var(--mono);
+  margin: 0;
+  padding: 44px 16px;
+  color: var(--text);
+  font-size: 0.9375rem;
   text-align: center;
+}
+
+.cmdk-empty span {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.8125rem;
 }
 
 .cmdk-foot {
   display: flex;
+  flex-shrink: 0;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  padding: 10px 14px;
+  gap: 8px 18px;
+  padding: 6px 16px;
   border-top: 1px solid var(--line);
   color: var(--faint);
-  font: 500 0.68rem/1 var(--mono);
+  font-size: 0.75rem;
 }
 
-.cmdk-foot span {
+.cmdk-foot > span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+
+.cmdk-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmdk-fulltext {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.cmdk-fulltext:hover {
+  color: var(--text);
 }
 
 /* 顶栏触发按钮 */
@@ -296,13 +334,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--line-strong);
-  background: transparent;
+  border-radius: 6px;
+  background: var(--panel);
   color: var(--muted);
-  font: 700 0.72rem/1 var(--mono);
-  letter-spacing: 0.04em;
+  font: 500 0.8125rem/1 var(--sans);
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease;
 }
@@ -310,7 +348,7 @@
 .nav-command:hover,
 .nav-command:focus-visible {
   color: var(--text);
-  border-color: var(--accent);
+  border-color: var(--muted);
 }
 
 .nav-command .kbd {
@@ -319,9 +357,30 @@
 }
 
 @media (max-width: 640px) {
+  .cmdk-search {
+    gap: 8px;
+    padding-left: 16px;
+  }
+
+  .cmdk-close .kbd {
+    display: none;
+  }
+
+  .cmdk-close svg {
+    display: block;
+  }
+
+  .cmdk-foot .cmdk-count {
+    display: none;
+  }
+
+  .cmdk-fulltext {
+    margin-left: auto;
+  }
+
   .nav-command {
     justify-content: center;
-    min-width: 36px;
+    min-width: 44px;
     padding: 0 9px;
   }
 
@@ -338,11 +397,10 @@
   .nav-command {
     justify-content: flex-start;
     gap: 8px;
-    min-height: 38px;
-    margin-top: 22px;
+    min-height: 44px;
+    margin-top: 0;
     padding: 0 12px;
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
+    font-size: 0.8125rem;
   }
 
   .nav-command .kbd {
@@ -1147,4 +1205,191 @@ main,
   color: inherit;
   font: inherit;
   letter-spacing: 0;
+}
+
+/* Shared reading rhythm: keep Chinese text open and article links easy to scan. */
+body {
+  overflow-wrap: break-word;
+}
+
+.site-frame--immersive .site-header,
+.site-frame:not(.site-frame--immersive) .site-header {
+  padding-inline: max(24px, calc((100vw - 1080px) / 2));
+}
+
+.site-frame--immersive .site-nav a,
+.site-frame:not(.site-frame--immersive) .site-nav a {
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.site-frame--immersive .site-nav,
+.site-frame:not(.site-frame--immersive) .site-nav {
+  overflow: visible;
+}
+
+.site-nav a span {
+  display: none !important;
+}
+
+.site-frame--immersive .post-row,
+.post-row {
+  grid-template-columns: 36px minmax(0, 1fr) 44px;
+  gap: 24px;
+  padding: 28px 0;
+  will-change: auto;
+}
+
+.site-frame--immersive .post-row .post-title,
+.post-row .post-title {
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-size: clamp(1.1875rem, 2vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.55;
+}
+
+.post-copy > p {
+  max-width: 48rem;
+  margin-top: 10px;
+  font-size: 0.9375rem;
+  line-height: 1.85;
+}
+
+.post-meta {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.round-link {
+  align-self: center;
+  border: 0;
+  color: var(--muted);
+}
+
+.article-shell {
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.article-header h1 {
+  max-width: 20em;
+  font-family: var(--sans);
+  font-size: clamp(2rem, 4.4vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.article-deck {
+  max-width: 42rem;
+  margin-top: 24px;
+  font-size: 1.0625rem;
+  line-height: 1.9;
+}
+
+.prose {
+  max-width: 42rem;
+  font-size: 1.0625rem;
+  line-height: 1.95;
+}
+
+.prose h2,
+.prose h3 {
+  font-family: var(--sans);
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.article-aside {
+  font-size: 0.8125rem;
+  top: 104px;
+}
+
+.footer-title,
+.site-frame--immersive .footer-title {
+  white-space: normal;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.site-frame--immersive .site-footer {
+  padding-inline: max(24px, calc((100vw - 1080px) / 2));
+}
+
+.site-frame--immersive .footer-callout {
+  padding-bottom: 32px;
+}
+
+.site-frame--immersive .footer-title {
+  margin-top: 18px;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+@media (max-width: 639px) {
+  .site-frame--immersive .site-header,
+  .site-frame:not(.site-frame--immersive) .site-header {
+    gap: 4px;
+    padding-inline: 14px;
+  }
+
+  .site-frame--immersive .site-nav a,
+  .site-frame:not(.site-frame--immersive) .site-nav a {
+    min-width: 44px;
+    padding-inline: 4px;
+    font-size: 0.8125rem;
+  }
+
+  .site-frame--immersive .post-row,
+  .post-row {
+    grid-template-columns: minmax(0, 1fr) 24px;
+    gap: 12px;
+    padding: 24px 0;
+  }
+
+  .post-row .post-index {
+    display: none;
+  }
+
+  .post-row .round-link {
+    width: 24px;
+    height: 44px;
+  }
+
+  .post-copy > p {
+    font-size: 0.9375rem;
+    line-height: 1.85;
+  }
+
+  .article-shell {
+    padding-top: 28px;
+  }
+
+  .article-header {
+    padding-bottom: 28px;
+  }
+
+  .article-grid {
+    gap: 28px;
+    padding-top: 28px;
+  }
+
+  .article-header .back-link {
+    margin-bottom: 20px;
+  }
+
+  .prose {
+    font-size: 1rem;
+    line-height: 1.95;
+  }
+
+  .site-frame--immersive .site-footer {
+    padding: 44px 20px 28px;
+  }
 }

@@ -5,7 +5,7 @@
   --panel-raised: #171b22;
   --text: #f2f4f7;
   --muted: #9ba3ae;
-  --faint: #68717d;
+  --faint: #8b949f;
   --line: #252a32;
   --line-strong: #3a414c;
   --accent: #83e1b1;
@@ -666,7 +666,7 @@ main {
   text-transform: uppercase;
 }
 
-.post-row h2,
+.post-row .post-title,
 .repo-row h2 {
   margin: 14px 0 0;
   overflow-wrap: anywhere;
@@ -882,26 +882,69 @@ main {
 
 .search-shell {
   min-height: 360px;
-  padding-top: 24px;
-  border-top: 1px solid var(--line-strong);
 }
 
 .search-state {
-  margin: 0 0 20px;
+  margin: 12px 0 24px;
   color: var(--muted);
-  font: 0.76rem/1.5 var(--mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
 }
 
-.pagefind-ui {
-  --pagefind-ui-scale: 1;
-  --pagefind-ui-primary: var(--accent);
-  --pagefind-ui-text: var(--text);
-  --pagefind-ui-background: var(--panel);
-  --pagefind-ui-border: var(--line-strong);
-  --pagefind-ui-tag: var(--panel-raised);
-  --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 0;
-  --pagefind-ui-font: var(--sans);
+.search-components {
+  --pf-text: var(--text);
+  --pf-text-secondary: var(--muted);
+  --pf-text-muted: var(--faint);
+  --pf-background: var(--panel);
+  --pf-border: var(--line-strong);
+  --pf-border-focus: var(--muted);
+  --pf-hover: var(--panel-raised);
+  --pf-mark: var(--accent);
+  --pf-skeleton: var(--panel-raised);
+  --pf-skeleton-shine: var(--line);
+  --pf-outline-focus: var(--accent);
+  --pf-outline-width: 1px;
+  --pf-shadow-sm: none;
+  --pf-error-bg: var(--panel);
+  --pf-error-border: var(--danger);
+  --pf-error-text: var(--danger);
+  --pf-error-text-secondary: var(--muted);
+  --pf-font: var(--sans);
+  --pf-input-height: 60px;
+  --pf-input-font-size: 16px;
+  --pf-summary-font-size: 13px;
+  --pf-result-title-font-size: 18px;
+  --pf-result-excerpt-font-size: 14px;
+  --pf-results-gap: 12px;
+  --pf-border-radius: 8px;
+}
+
+/* Pagefind 的组件样式有 ID 级权重；仅覆盖这些无法用主题变量设置的间距。 */
+.search-components .pf-input {
+  padding-inline: 48px 56px !important;
+}
+
+.search-components .pf-input-wrapper::before {
+  inset-inline-start: 20px !important;
+  width: 18px !important;
+  height: 18px !important;
+  top: 21px !important;
+}
+
+.search-components .pf-result-card {
+  padding: 20px !important;
+}
+
+.search-components .pf-summary {
+  margin: 0 0 16px !important;
+  line-height: 1.6 !important;
+}
+
+.search-components .pf-result-excerpt {
+  margin-top: 10px !important;
+  white-space: normal !important;
+  line-height: 1.7 !important;
+  overflow-wrap: anywhere;
 }
 
 .article-shell {
@@ -1444,18 +1487,9 @@ main {
     color: var(--text);
   }
 
-  .post-row:hover,
-  .repo-row:hover,
-  .post-row:focus-visible,
-  .repo-row:focus-visible {
-    padding-right: 14px;
-    padding-left: 14px;
-    background: var(--panel);
-  }
-
-  .post-row:hover h2,
+  .post-row:hover .post-title,
   .repo-row:hover h2,
-  .post-row:focus-visible h2,
+  .post-row:focus-visible .post-title,
   .repo-row:focus-visible h2 {
     color: var(--accent);
   }
@@ -2283,7 +2317,7 @@ body:not(.is-immersive)::before {
   padding: clamp(38px, 5vw, 68px) 0;
 }
 
-.site-frame--immersive .post-row h2 {
+.site-frame--immersive .post-row .post-title {
   font-family: var(--sans);
   font-size: clamp(1.75rem, 3.5vw, 3.5rem);
   font-weight: 620;
@@ -2489,7 +2523,7 @@ body:not(.is-immersive)::before {
     grid-template-columns: 30px minmax(0, 1fr) 44px;
   }
 
-  .site-frame--immersive .post-row h2 {
+  .site-frame--immersive .post-row .post-title {
     font-size: 1.8rem;
   }
 
@@ -2548,7 +2582,7 @@ body:not(.is-immersive)::before {
   --panel-raised: #14181e;
   --text: #ebece9;
   --muted: #9a9fa7;
-  --faint: #686f79;
+  --faint: #8b949f;
   --line: #20252c;
   --line-strong: #333a44;
   --accent: #8bd6aa;
@@ -3014,7 +3048,7 @@ body:not(.is-immersive)::before {
   padding: 34px 0;
 }
 
-.site-frame--immersive .post-row h2 {
+.site-frame--immersive .post-row .post-title {
   font-family: var(--sans);
   font-size: clamp(1.4rem, 2.5vw, 2.2rem);
   font-weight: 600;
@@ -3283,7 +3317,7 @@ body:not(.is-immersive)::before {
     padding: 30px 0;
   }
 
-  .site-frame--immersive .post-row h2 {
+  .site-frame--immersive .post-row .post-title {
     font-size: 1.45rem;
   }
 
@@ -3872,9 +3906,6 @@ body:not(.is-immersive)::before {
   .post-row:focus-visible,
   .repo-row:focus-visible {
     transform: translateY(-2px);
-    padding-right: 0;
-    padding-left: 0;
-    box-shadow: inset 3px 0 0 var(--accent);
   }
 
   .post-row:hover .round-link,
@@ -3882,9 +3913,7 @@ body:not(.is-immersive)::before {
   .post-row:focus-visible .round-link,
   .repo-row:focus-visible .round-link {
     transform: translate(3px, -3px);
-    color: var(--accent-ink);
-    border-color: var(--accent);
-    background: var(--accent);
+    color: var(--accent);
   }
 
   .filter-button:hover {

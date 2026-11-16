@@ -2,12 +2,14 @@
 
 echo 的深色个人技术博客。项目已经从单页静态站迁移为 Astro 7 静态内容工程。
 
+网站：[echobb.me](https://echobb.me)（统一跳转到 `https://www.echobb.me`）。
+
 ## 已实现
 
 - 深色、无渐变、移动优先的响应式界面
 - Markdown 内容集合与严格 Schema 校验
 - 文章详情、上一篇/下一篇、标签、归档、RSS 和 Sitemap
-- 独立 About 页面，未知资料明确显示为待补充
+- 独立 About 页面与个人身份、社交链接配置
 - Pagefind 1.5 Component UI 本地全文搜索
 - 每篇文章自动生成 1200×630 PNG 分享图
 - 构建时同步 `cyb101003` 的全部公开仓库
@@ -61,11 +63,11 @@ featured: false
 - About 页面：`src/pages/about/index.astro`
 - 设计变量和响应式布局：`src/styles/global.css`
 
-YouTube 和 X 暂时显示为待补充图标。将真实 URL 填入 `src/config.ts` 后会自动变为可访问链接。
+社交链接已在 `src/config.ts` 中配置。首页精选项目在 `src/pages/index.astro` 的 `featuredNames` 中调整；全部公开仓库仍在项目页展示。
 
 ## 部署
 
-部署前设置真实域名：
+默认域名为 `https://www.echobb.me`。部署到其他域名时可覆盖：
 
 ```bash
 SITE_URL=https://你的域名 npm run build
