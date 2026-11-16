@@ -1140,11 +1140,11 @@ main,
 
 /* ============================================================
    14. Odometer — 数字滚动
-   .home-stats .odo 用更高权重覆盖 .home-stats strong 的 display。
+   旧统计栏与首页概览共用同一套数字样式。
    行高由 JS 实测后写进 style，避免用 em 猜字体导致半格裁切。
    ============================================================ */
 
-.home-stats .odo {
+:is(.home-stats, .home-summary) .odo {
   display: flex;
   align-items: flex-end;
   gap: 1px;
@@ -1167,7 +1167,7 @@ main,
 }
 
 /* .home-stats b 原本是绝对定位的右上角箭头，必须显式还原 */
-.home-stats .odo .odo-strip > b {
+:is(.home-stats, .home-summary) .odo .odo-strip > b {
   position: static;
   inset: auto;
   display: flex;
@@ -1188,7 +1188,7 @@ main,
   }
 }
 
-.home-stats .odo .odo-digits {
+:is(.home-stats, .home-summary) .odo > span {
   display: flex;
   align-items: flex-end;
   gap: 1px;
@@ -1200,7 +1200,7 @@ main,
 
 /* .site-frame--immersive .home-stats span 给副标签定了 0.75rem 字号和
    12px 上边距，权重与这里同级会按顺序覆盖，所以多加一层 .odo 拉开权重 */
-.home-stats .odo .odo-digits span {
+:is(.home-stats, .home-summary) .odo .odo-digits span {
   margin: 0;
   color: inherit;
   font: inherit;

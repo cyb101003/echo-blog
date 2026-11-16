@@ -3512,6 +3512,16 @@ body:not(.is-immersive)::before {
 
 .button-primary:hover .motion-arrow,
 .button-primary:focus-visible .motion-arrow,
+.button-quiet:hover .motion-arrow,
+.button-quiet:focus-visible .motion-arrow,
+.portrait-link:hover .motion-arrow,
+.portrait-link:focus-visible .motion-arrow,
+.journal-heading > a:hover .motion-arrow,
+.journal-heading > a:focus-visible .motion-arrow,
+.project-card:hover .motion-arrow,
+.project-card:focus-visible .motion-arrow,
+.home-summary a:hover .motion-arrow,
+.home-summary a:focus-visible .motion-arrow,
 .home-section-head a:hover .motion-arrow,
 .home-section-head a:focus-visible .motion-arrow,
 .featured-repo:hover .motion-arrow,
@@ -3519,6 +3529,11 @@ body:not(.is-immersive)::before {
 .home-stats a:hover .motion-arrow,
 .home-stats a:focus-visible .motion-arrow {
   transform: translate(3px, -3px);
+}
+
+.hero-actions .button-primary:hover .motion-arrow,
+.hero-actions .button-primary:focus-visible .motion-arrow {
+  transform: translateY(4px);
 }
 
 .home-section-head a .motion-arrow {

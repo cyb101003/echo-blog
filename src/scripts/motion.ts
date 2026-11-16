@@ -11,18 +11,22 @@ function setupHeroEntrance() {
   }
 
   window.requestAnimationFrame(() => {
-    items.forEach(item => item.classList.add("is-entered"));
+    window.requestAnimationFrame(() => {
+      items.forEach(item => item.classList.add("is-entered"));
+    });
   });
 }
 
 function setupNameDecode() {
   const target = document.querySelector<HTMLElement>("[data-decode-name]");
-  if (!target) return;
+  if (!target || target.dataset.decodeReady === "true") return;
+  target.dataset.decodeReady = "true";
 
   const finalValue = target.dataset.decodeName || "Echo";
   const runtime = window as MotionWindow;
   if (reducedMotion() || runtime.__echoNameDecoded === true) {
     target.textContent = finalValue;
+    target.classList.add("is-decoded");
     return;
   }
 
@@ -52,6 +56,27 @@ function setupNameDecode() {
   };
 
   draw();
+}
+
+function setupScrollReveal() {
+  const targets = [...document.querySelectorAll<HTMLElement>("[data-reveal]")]
+    .filter(item => item.dataset.revealReady !== "true");
+  if (!targets.length || reducedMotion() || !("IntersectionObserver" in window)) return;
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -4%" });
+
+  targets.forEach(item => {
+    item.dataset.revealReady = "true";
+    item.classList.add("reveal-ready");
+    observer.observe(item);
+  });
+  document.addEventListener("astro:before-swap", () => observer.disconnect(), { once: true });
 }
 
 function setupImageReveal() {
@@ -316,6 +341,7 @@ export function setupMotionSystem() {
   setupPageTransitionFallback();
   setupHeroEntrance();
   setupNameDecode();
+  setupScrollReveal();
   setupImageReveal();
   setupNavIndicator();
   setupReadingCards();

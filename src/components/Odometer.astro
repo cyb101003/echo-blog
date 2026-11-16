@@ -4,7 +4,7 @@
  * 服务端直接渲染最终数字，没 JS 时就是普通文本；
  * 有 JS 时拆成位数列，滚进视口后从 0 逐位落到目标值。
  */
-type Props = { value: number };
+type Props = { value: number | string };
 
 const { value } = Astro.props;
 const text = String(value);
